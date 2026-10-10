@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+
+<title>🦖 小恐龍波動大冒險</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#e9f7ff;font-family:Arial,"Microsoft JhengHei",sans-serif;text-align:center;color:#183153}
+
+.wrap{max-width:650px;margin:auto;padding:12px}
+
+h1{font-size:25px;color:#087e66;margin:12px 0}
+
+.card{background:white;border-radius:17px;padding:13px;margin:10px 0;box-shadow:0 3px 12px #b8d8e8}
+
+.stats{display:flex;justify-content:space-around;font-weight:bold;font-size:15px}
+
+canvas{width:100%;height:auto;border-radius:12px;background:#dff6ff;touch-action:manipulation}
+
+button{border:0;border-radius:12px;padding:13px 18px;margin:5px;font-size:17px;font-weight:bold;background:#16a085;color:white;cursor:pointer}
+
+button:active{transform:scale(.96)}
+
+.jump{background:#ff9800;font-size:22px;width:85%}
+
+.skill{background:#7856c8}
+
+#question{font-size:19px;font-weight:bold;line-height:1.6}
+
+.options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.options button{font-size:15px;background:#2980b9;margin:0;min-height:58px}
+
+#message{font-weight:bold;color:#d35400;min-height:27px}
+
+#explain{font-size:15px;color:#176a55;line-height:1.6}
+
+small{color:#607d8b}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>🦖 小恐龍波動大冒險</h1>
+
+<div class="card stats">
+
+<span>⭐ <span id="score">0</span></span>
+
+<span>❤️ <span id="hp">3</span></span>
+
+<span>🏁 第<span id="level">1</span>關</span>
+
+<span>⏰ <span id="time">90</span>秒</span>
+
+</div>
+
+<div class="card">
+
+<canvas id="game" width="600" height="270"></canvas>
+
+<div>
+
+<button onclick="startGame()">▶ 開始／重玩</button>
+
+<button class="skill" onclick="useSkill()">⚡ 無敵護盾</button>
+
+</div>
+
+<button class="jump" onclick="jump()">🦖 跳躍！</button>
+
+<div id="message">按開始，準備冒險！</div>
+
+<small>點畫面或按空白鍵跳躍｜答對題目獲得護盾能量</small>
+
+</div>
+
+<div class="card">
+
+<h2>🌊 理化挑戰</h2>
+
+<div id="question">開始遊戲後出題</div>
+
+<div class="options" id="options"></div>
+
+<p id="explain"></p>
+
+</div>
+
+</div>
+
+<script>
+
+const canvas=document.getElementById("game");
+
+const ctx=canvas.getContext("2d");
+
+let running=false,score=0,hp=3,level=1,time=90;
+
+let dino={x:75,y:184,vy:0,w:42,h:45};
+
+let obstacles=[],coins=[],particles=[];
+
+let frame=0,speed=4,shield=0,energy=0;
+
+let last=0,clock=0,questionIndex=-1;
+
+let used=[],answered=false,boss=false;
+
+let audioCtx;
+
+function sound(freq=440,duration=.1,type="square"){
+
+try{
+
+audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();
+
+let o=audioCtx.createOscillator(),g=audioCtx.createGain();
+
+o.type=type;o.frequency.value=freq;
+
+g.gain.setValueAtTime(.06,audioCtx.currentTime);
+
+g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);
+
+o.connect(g);g.connect(audioCtx.destination);
+
+o.start();o.stop(audioCtx.currentTime+duration);
+
+}catch(e){}
+
+}
+
+const questions=[
+
+["波形中最高的位置稱為？",["波峰","波谷","振幅","波長"],0,"波峰是波形的最高點。"],
+
+["波形中最低的位置稱為？",["波峰","波谷","頻率","週期"],1,"波谷是波形的最低點。"],
+
+["相鄰兩個波峰間的距離稱為？",["振幅","週期","波長","頻率"],2,"相鄰兩個波峰的距離是一個波長。"],
+
+["波峰到平衡位置的距離稱為？",["振幅","波速","波長","週期"],0,"振幅是偏離平衡位置的最大距離。"],
+
+["每秒振動的次數稱為？",["週期","頻率","波長","振幅"],1,"頻率是每秒振動的次數。"],
+
+["頻率的單位是？",["公尺","秒","赫茲","牛頓"],2,"頻率單位是Hz（赫茲）。"],
+
+["波速的公式是？",["頻率×波長","頻率÷波長","波長÷振幅","振幅×週期"],0,"波速＝頻率×波長。"],
+
+["波長2公尺、頻率3Hz，波速？",["5m/s","6m/s","1.5m/s","9m/s"],1,"2×3＝6m/s。"],
+
+["波長4公尺、頻率5Hz，波速？",["9m/s","1.25m/s","20m/s","10m/s"],2,"4×5＝20m/s。"],
+
+["波速12m/s、頻率3Hz，波長？",["4m","9m","15m","36m"],0,"12÷3＝4公尺。"],
+
+["波速20m/s、波長5m，頻率？",["100Hz","4Hz","15Hz","25Hz"],1,"20÷5＝4Hz。"],
+
+["振動一次所需的時間稱為？",["頻率","波速","週期","振幅"],2,"週期是完成一次振動的時間。"],
+
+["週期的單位是？",["Hz","m/s","秒","公尺"],2,"週期單位是秒。"],
+
+["頻率2Hz，週期為？",["2秒","0.5秒","4秒","1秒"],1,"週期＝1÷頻率＝0.5秒。"],
+
+["頻率5Hz，週期為？",["5秒","1秒","0.2秒","10秒"],2,"1÷5＝0.2秒。"],
+
+["週期0.25秒，頻率？",["4Hz","2Hz","0.25Hz","8Hz"],0,"1÷0.25＝4Hz。"],
+
+["頻率越高，代表？",["振動越慢","振動越快","振幅越大","波速一定越快"],1,"頻率高表示每秒振動次數較多。"],
+
+["振幅越大，通常表示波動的？",["能量越大","頻率越小","波長越短","速度越慢"],0,"同種波在其他條件相同時，振幅較大通常傳遞較多能量。"],
+
+["聲波在空氣中屬於？",["橫波","縱波","電磁波","靜止波"],1,"空氣中的聲波是縱波。"],
+
+["繩波通常屬於？",["橫波","縱波","聲波","無法傳播"],0,"繩波通常是橫波。"],
+
+["波傳遞時主要傳遞什麼？",["物質","能量","空氣","水"],1,"波主要傳遞能量，介質不隨波整體前進。"],
+
+["波長3m、頻率4Hz，波速？",["7m/s","12m/s","1.33m/s","24m/s"],1,"3×4＝12m/s。"],
+
+["波速30m/s、頻率6Hz，波長？",["180m","36m","5m","24m"],2,"30÷6＝5m。"],
+
+["波速8m/s、波長2m，頻率？",["16Hz","6Hz","4Hz","10Hz"],2,"8÷2＝4Hz。"],
+
+["頻率10Hz，每秒振動幾次？",["1次","5次","10次","100次"],2,"10Hz表示每秒振動10次。"],
+
+["同一介質、波速固定，頻率變兩倍，波長？",["變兩倍","變一半","不變","變四倍"],1,"波速固定時，頻率與波長成反比。"],
+
+["同一介質、波速固定，波長變兩倍，頻率？",["變兩倍","變一半","不變","變四倍"],1,"頻率＝波速÷波長。"],
+
+["橫波的振動方向與傳播方向？",["平行","垂直","相同","無關"],1,"橫波的振動方向垂直於傳播方向。"],
+
+["縱波的振動方向與傳播方向？",["垂直","平行","相反且垂直","無關"],1,"縱波的振動方向平行於傳播方向。"],
+
+["波速15m/s、波長3m，頻率？",["45Hz","12Hz","5Hz","18Hz"],2,"15÷3＝5Hz。"]
+
+];
+
+function update(){
+
+document.getElementById("score").textContent=score;
+
+document.getElementById("hp").textContent=hp;
+
+document.getElementById("level").textContent=level;
+
+document.getElementById("time").textContent=time;
+
+}
+
+function msg(t){document.getElementById("message").textContent=t;}
+
+function nextQuestion(){
+
+if(!running)return;
+
+if(used.length===questions.length)used=[];
+
+let pool=questions.map((_,i)=>i).filter(i=>!used.includes(i));
+
+let n=pool[Math.floor(Math.random()*pool.length)];
+
+used.push(n);questionIndex=n;answered=false;
+
+let q=questions[n];
+
+document.getElementById("question").textContent=q[0];
+
+document.getElementById("explain").textContent="";
+
+document.getElementById("options").innerHTML="";
+
+q[1].forEach((v,i)=>{
+
+let b=document.createElement("button");
+
+b.textContent=String.fromCharCode(65+i)+"．"+v;
+
+b.onclick=()=>answer(i);
+
+document.getElementById("options").appendChild(b);
+
+});
+
+}
+
+function answer(i){
+
+if(!running||answered)return;
+
+answered=true;
+
+let q=questions[questionIndex];
+
+if(i===q[2]){
+
+score+=20;energy++;
+
+msg("✅ 答對！+20分　護盾能量 "+energy+"/3");
+
+sound(700,.12);setTimeout(()=>sound(1000,.12),120);
+
+}else{
+
+hp--;msg("❌ 答錯！生命 -1");
+
+sound(180,.25);
+
+}
+
+document.getElementById("explain").textContent="💡 "+q[3];
+
+document.querySelectorAll(".options button").forEach(b=>b.disabled=true);
+
+update();
+
+if(hp<=0){endGame();return;}
+
+setTimeout(()=>{if(running)nextQuestion();},1800);
+
+}
+
+function jump(){
+
+if(!running)return;
+
+if(dino.y>=184){
+
+dino.vy=-12;
+
+sound(500,.08);
+
+}
+
+}
+
+function useSkill(){
+
+if(!running)return;
+
+if(energy<3){msg("⚡ 答對3題才能使用護盾！");return;}
+
+energy-=3;shield=240;
+
+msg("🛡️ 無敵護盾啟動！");
+
+sound(950,.3,"sine");
+
+}
+
+function startGame(){
+
+running=true;score=0;hp=3;level=1;time=90;
+
+frame=0;speed=4;shield=0;energy=0;
+
+obstacles=[];coins=[];particles=[];
+
+dino.y=184;dino.vy=0;clock=0;
+
+last=performance.now();boss=false;
+
+msg("🦖 出發！跳過石頭，回答理化題！");
+
+update();nextQuestion();
+
+}
+
+function endGame(){
+
+running=false;
+
+msg("🏁 遊戲結束！總分："+score+"分，按開始再挑戰！");
+
+sound(180,.4);
+
+}
+
+function collide(a,b){
+
+return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+
+}
+
+function drawWave(){
+
+ctx.strokeStyle="#5bc0de";ctx.lineWidth=2;
+
+ctx.beginPath();
+
+for(let x=0;x<=600;x+=4){
+
+let y=50+16*Math.sin((x+frame*2)/28);
+
+if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+
+}
+
+ctx.stroke();
+
+ctx.fillStyle="#31708e";
+
+ctx.font="13px Arial";
+
+ctx.fillText("🌊 波峰・波谷・波長・頻率・波速",12,20);
+
+}
+
+function render(now){
+
+requestAnimationFrame(render);
+
+let dt=Math.min((now-last)/16.67||1,2);
+
+last=now;
+
+ctx.clearRect(0,0,600,270);
+
+ctx.fillStyle="#dff6ff";ctx.fillRect(0,0,600,270);
+
+drawWave();
+
+ctx.fillStyle="#91d79c";ctx.fillRect(0,229,600,41);
+
+ctx.fillStyle="#4caf50";ctx.fillRect(0,225,600,5);
+
+if(running){
+
+frame+=dt;
+
+clock+=dt/60;
+
+if(clock>=1){
+
+time--;clock-=1;
+
+if(time<=0){time=0;endGame();}
+
+update();
+
+}
+
+if(running){
+
+level=Math.floor(score/120)+1;
+
+speed=4+Math.min(level*.5,4);
+
+if(shield>0)shield-=dt;
+
+dino.vy+=.65*dt;
+
+dino.y+=dino.vy*dt;
+
+if(dino.y>184){dino.y=184;dino.vy=0;}
+
+if(Math.floor(frame)%Math.max(58,Math.floor(110-speed*5))===0){
+
+obstacles.push({x:610,y:201,w:24,h:28,hit:false});
+
+}
+
+if(Math.floor(frame)%105===0){
+
+coins.push({x:610,y:150,w:20,h:20});
+
+}
+
+obstacles.forEach(o=>{
+
+o.x-=speed*dt;
+
+if(!o.hit&&collide(dino,o)){
+
+o.hit=true;
+
+if(shield<=0){
+
+hp--;msg("💥 撞到石頭！生命 -1");
+
+sound(160,.2);
+
+if(hp<=0)endGame();
+
+}else{score+=5;msg("🛡️ 護盾擋住石頭！");}
+
+update();
+
+}
+
+});
+
+coins.forEach(c=>{
+
+c.x-=speed*dt;
+
+if(!c.hit&&collide(dino,c)){
+
+c.hit=true;score+=5;sound(850,.08);update();
+
+}
+
+});
+
+obstacles=obstacles.filter(o=>o.x>-40&&!o.hit);
+
+coins=coins.filter(c=>c.x>-30&&!c.hit);
+
+}
+
+}
+
+ctx.font="43px Arial";
+
+ctx.fillText(shield>0?"🛡️":"🦖",dino.x,dino.y+39);
+
+obstacles.forEach(o=>{
+
+ctx.fillStyle="#795548";
+
+ctx.beginPath();
+
+ctx.moveTo(o.x,o.y+o.h);
+
+ctx.lineTo(o.x+o.w/2,o.y);
+
+ctx.lineTo(o.x+o.w,o.y+o.h);
+
+ctx.fill();
+
+});
+
+coins.forEach(c=>{
+
+ctx.font="23px Arial";
+
+ctx.fillText("🪙",c.x,c.y+20);
+
+});
+
+if(shield>0){
+
+ctx.strokeStyle="#9c27b0";
+
+ctx.lineWidth=4;
+
+ctx.beginPath();
+
+ctx.arc(dino.x+20,dino.y+22,34,0,Math.PI*2);
+
+ctx.stroke();
+
+}
+
+if(level>=3&&running){
+
+ctx.font="26px Arial";
+
+ctx.fillText("👾",520,100);
+
+ctx.fillStyle="#c62828";
+
+ctx.font="12px Arial";
+
+ctx.fillText("BOSS 區域",505,117);
+
+}
+
+}
+
+requestAnimationFrame(render);
+
+canvas.addEventListener("pointerdown",jump);
+
+document.addEventListener("keydown",e=>{
+
+if(e.code==="Space"){
+
+e.preventDefault();jump();
+
+}
+
+});
+
+update();
+
+</script>
+
+</body>
+
+</html>
