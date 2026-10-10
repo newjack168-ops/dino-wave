@@ -8,43 +8,155 @@
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 
-<title>🦖 小恐龍波動大冒險</title>
+<title>小恐龍波動大冒險 2.0</title>
 
 <style>
 
 *{box-sizing:border-box}
 
-body{margin:0;background:#e9f7ff;font-family:Arial,"Microsoft JhengHei",sans-serif;text-align:center;color:#183153}
+body{
+
+margin:0;
+
+background:linear-gradient(#dff5ff,#f4fff1);
+
+font-family:Arial,"Microsoft JhengHei",sans-serif;
+
+color:#234;
+
+text-align:center;
+
+}
 
 .wrap{max-width:650px;margin:auto;padding:12px}
 
-h1{font-size:25px;color:#087e66;margin:12px 0}
+h1{font-size:25px;color:#087d66}
 
-.card{background:white;border-radius:17px;padding:13px;margin:10px 0;box-shadow:0 3px 12px #b8d8e8}
+.card{
 
-.stats{display:flex;justify-content:space-around;font-weight:bold;font-size:15px}
+background:white;
 
-canvas{width:100%;height:auto;border-radius:12px;background:#dff6ff;touch-action:manipulation}
+border-radius:18px;
 
-button{border:0;border-radius:12px;padding:13px 18px;margin:5px;font-size:17px;font-weight:bold;background:#16a085;color:white;cursor:pointer}
+padding:15px;
 
-button:active{transform:scale(.96)}
+margin:12px 0;
 
-.jump{background:#ff9800;font-size:22px;width:85%}
+box-shadow:0 4px 14px #b8d6df;
 
-.skill{background:#7856c8}
+}
 
-#question{font-size:19px;font-weight:bold;line-height:1.6}
+button{
 
-.options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+border:0;
 
-.options button{font-size:15px;background:#2980b9;margin:0;min-height:58px}
+border-radius:12px;
 
-#message{font-weight:bold;color:#d35400;min-height:27px}
+padding:13px 18px;
 
-#explain{font-size:15px;color:#176a55;line-height:1.6}
+margin:5px;
 
-small{color:#607d8b}
+font-size:17px;
+
+font-weight:bold;
+
+background:#16a085;
+
+color:white;
+
+}
+
+button:disabled{opacity:.45}
+
+.stats{
+
+display:flex;
+
+justify-content:space-around;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+font-weight:bold;
+
+}
+
+canvas{
+
+width:100%;
+
+height:auto;
+
+border-radius:12px;
+
+background:#dff6ff;
+
+touch-action:manipulation;
+
+}
+
+.jump{
+
+background:#ff9800;
+
+font-size:23px;
+
+width:90%;
+
+}
+
+.options{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:8px;
+
+}
+
+.options button{
+
+background:#2980b9;
+
+font-size:15px;
+
+min-height:60px;
+
+margin:0;
+
+}
+
+#question{
+
+font-size:19px;
+
+font-weight:bold;
+
+line-height:1.6;
+
+}
+
+#message{color:#d35400;font-weight:bold}
+
+#explain{color:#176a55;line-height:1.6}
+
+.hidden{display:none}
+
+.badge{
+
+display:inline-block;
+
+background:#e8f8f0;
+
+border-radius:10px;
+
+padding:8px;
+
+margin:5px;
+
+}
 
 </style>
 
@@ -54,45 +166,75 @@ small{color:#607d8b}
 
 <div class="wrap">
 
-<h1>🦖 小恐龍波動大冒險</h1>
+<h1>🦖 小恐龍波動大冒險 2.0</h1>
 
 <div class="card stats">
 
 <span>⭐ <span id="score">0</span></span>
 
-<span>❤️ <span id="hp">3</span></span>
+<span>❤️ 復活 <span id="revives">0</span>/2</span>
 
 <span>🏁 第<span id="level">1</span>關</span>
 
-<span>⏰ <span id="time">90</span>秒</span>
+<span>🏆 <span id="best">0</span></span>
 
 </div>
 
 <div class="card">
 
-<canvas id="game" width="600" height="270"></canvas>
+<h2 id="dinoName">🦖 Lv.1 小恐龍</h2>
+
+<div id="trainingInfo">
+
+答對題目強化恐龍！
+
+</div>
+
+</div>
+
+<div class="card" id="training">
+
+<h2>📚 恐龍訓練營</h2>
+
+<p>不限答題次數，答對10題進化傳說龍！</p>
+
+<div class="badge">
+
+答對：<span id="correct">0</span>題
+
+</div>
+
+<div id="trainQuestion"></div>
+
+<div class="options" id="trainOptions"></div>
+
+<p id="trainExplain"></p>
+
+<button onclick="startGame()">▶ 開始冒險</button>
+
+</div>
+
+<div class="card hidden" id="gameArea">
+
+<canvas id="game" width="600" height="280"></canvas>
+
+<button class="jump" onclick="jump()">🦖 跳躍</button>
+
+<div id="message">準備冒險！</div>
 
 <div>
 
-<button onclick="startGame()">▶ 開始／重玩</button>
-
-<button class="skill" onclick="useSkill()">⚡ 無敵護盾</button>
+<button onclick="restart()">🔄 重新開始</button>
 
 </div>
 
-<button class="jump" onclick="jump()">🦖 跳躍！</button>
-
-<div id="message">按開始，準備冒險！</div>
-
-<small>點畫面或按空白鍵跳躍｜答對題目獲得護盾能量</small>
-
 </div>
 
-<div class="card">
+<div class="card hidden" id="quizArea">
 
-<h2>🌊 理化挑戰</h2>
+<h2 id="quizTitle">❤️ 復活挑戰</h2>
 
-<div id="question">開始遊戲後出題</div>
+<div id="question"></div>
 
 <div class="options" id="options"></div>
 
@@ -108,139 +250,175 @@ const canvas=document.getElementById("game");
 
 const ctx=canvas.getContext("2d");
 
-let running=false,score=0,hp=3,level=1,time=90;
+let state="training";
 
-let dino={x:75,y:184,vy:0,w:42,h:45};
+let score=0,level=1,correct=0,revives=0;
 
-let obstacles=[],coins=[],particles=[];
+let frame=0,speed=4,shield=0,boost=0;
 
-let frame=0,speed=4,shield=0,energy=0;
+let obstacles=[],items=[];
 
-let last=0,clock=0,questionIndex=-1;
+let dino={x:75,y:185,vy:0,jumps:0};
 
-let used=[],answered=false,boss=false;
+let currentQuestion=null;
 
-let audioCtx;
+let questionMode="";
 
-function sound(freq=440,duration=.1,type="square"){
+let bossHP=0,bossActive=false;
 
-try{
+let lastQuestion=-1;
 
-audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();
+let best=Number(localStorage.getItem("dinoWaveBest")||0);
 
-let o=audioCtx.createOscillator(),g=audioCtx.createGain();
-
-o.type=type;o.frequency.value=freq;
-
-g.gain.setValueAtTime(.06,audioCtx.currentTime);
-
-g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);
-
-o.connect(g);g.connect(audioCtx.destination);
-
-o.start();o.stop(audioCtx.currentTime+duration);
-
-}catch(e){}
-
-}
+document.getElementById("best").textContent=best;
 
 const questions=[
 
-["波形中最高的位置稱為？",["波峰","波谷","振幅","波長"],0,"波峰是波形的最高點。"],
+["波形最高點稱為？",["波峰","波谷","波長","週期"],0,"波峰是波形最高的位置。"],
 
-["波形中最低的位置稱為？",["波峰","波谷","頻率","週期"],1,"波谷是波形的最低點。"],
+["波形最低點稱為？",["振幅","波谷","頻率","波速"],1,"波谷是波形最低的位置。"],
 
-["相鄰兩個波峰間的距離稱為？",["振幅","週期","波長","頻率"],2,"相鄰兩個波峰的距離是一個波長。"],
+["相鄰兩波峰的距離是？",["振幅","頻率","波長","週期"],2,"相鄰波峰間的距離是一個波長。"],
 
-["波峰到平衡位置的距離稱為？",["振幅","波速","波長","週期"],0,"振幅是偏離平衡位置的最大距離。"],
+["波峰到平衡位置的距離是？",["振幅","波速","波長","頻率"],0,"振幅是偏離平衡位置的最大距離。"],
 
-["每秒振動的次數稱為？",["週期","頻率","波長","振幅"],1,"頻率是每秒振動的次數。"],
+["每秒振動次數稱為？",["週期","頻率","波速","波長"],1,"頻率是每秒振動次數。"],
 
-["頻率的單位是？",["公尺","秒","赫茲","牛頓"],2,"頻率單位是Hz（赫茲）。"],
+["頻率單位是？",["秒","公尺","赫茲","牛頓"],2,"頻率單位為Hz。"],
 
-["波速的公式是？",["頻率×波長","頻率÷波長","波長÷振幅","振幅×週期"],0,"波速＝頻率×波長。"],
+["波速公式是？",["頻率×波長","頻率÷波長","波長÷頻率","振幅×頻率"],0,"波速＝頻率×波長。"],
 
-["波長2公尺、頻率3Hz，波速？",["5m/s","6m/s","1.5m/s","9m/s"],1,"2×3＝6m/s。"],
+["頻率2Hz，週期？",["2秒","0.5秒","4秒","1秒"],1,"週期＝1÷頻率。"],
 
-["波長4公尺、頻率5Hz，波速？",["9m/s","1.25m/s","20m/s","10m/s"],2,"4×5＝20m/s。"],
-
-["波速12m/s、頻率3Hz，波長？",["4m","9m","15m","36m"],0,"12÷3＝4公尺。"],
-
-["波速20m/s、波長5m，頻率？",["100Hz","4Hz","15Hz","25Hz"],1,"20÷5＝4Hz。"],
-
-["振動一次所需的時間稱為？",["頻率","波速","週期","振幅"],2,"週期是完成一次振動的時間。"],
-
-["週期的單位是？",["Hz","m/s","秒","公尺"],2,"週期單位是秒。"],
-
-["頻率2Hz，週期為？",["2秒","0.5秒","4秒","1秒"],1,"週期＝1÷頻率＝0.5秒。"],
-
-["頻率5Hz，週期為？",["5秒","1秒","0.2秒","10秒"],2,"1÷5＝0.2秒。"],
+["頻率5Hz，週期？",["5秒","1秒","0.2秒","10秒"],2,"1÷5＝0.2秒。"],
 
 ["週期0.25秒，頻率？",["4Hz","2Hz","0.25Hz","8Hz"],0,"1÷0.25＝4Hz。"],
 
-["頻率越高，代表？",["振動越慢","振動越快","振幅越大","波速一定越快"],1,"頻率高表示每秒振動次數較多。"],
+["橫波振動方向與傳播方向？",["平行","垂直","相同","無關"],1,"橫波振動方向垂直於傳播方向。"],
 
-["振幅越大，通常表示波動的？",["能量越大","頻率越小","波長越短","速度越慢"],0,"同種波在其他條件相同時，振幅較大通常傳遞較多能量。"],
+["縱波振動方向與傳播方向？",["垂直","平行","相反","無關"],1,"縱波振動方向平行於傳播方向。"],
 
-["聲波在空氣中屬於？",["橫波","縱波","電磁波","靜止波"],1,"空氣中的聲波是縱波。"],
+["波主要傳遞什麼？",["物質","能量","空氣","水"],1,"波主要傳遞能量。"],
+
+["空氣中的聲波屬於？",["橫波","縱波","電磁波","光波"],1,"聲波在空氣中屬於縱波。"],
 
 ["繩波通常屬於？",["橫波","縱波","聲波","無法傳播"],0,"繩波通常是橫波。"],
 
-["波傳遞時主要傳遞什麼？",["物質","能量","空氣","水"],1,"波主要傳遞能量，介質不隨波整體前進。"],
+["頻率10Hz，每秒振動？",["1次","5次","10次","100次"],2,"10Hz表示每秒振動10次。"],
 
-["波長3m、頻率4Hz，波速？",["7m/s","12m/s","1.33m/s","24m/s"],1,"3×4＝12m/s。"],
+["波速12m/s、頻率3Hz，波長？",["4m","9m","15m","36m"],0,"12÷3＝4m。"],
 
-["波速30m/s、頻率6Hz，波長？",["180m","36m","5m","24m"],2,"30÷6＝5m。"],
+["波速20m/s、波長5m，頻率？",["100Hz","4Hz","15Hz","25Hz"],1,"20÷5＝4Hz。"],
 
-["波速8m/s、波長2m，頻率？",["16Hz","6Hz","4Hz","10Hz"],2,"8÷2＝4Hz。"],
+["頻率越高表示？",["振動越慢","振動越快","振幅越大","波長一定越大"],1,"頻率越高，每秒振動次數越多。"],
 
-["頻率10Hz，每秒振動幾次？",["1次","5次","10次","100次"],2,"10Hz表示每秒振動10次。"],
-
-["同一介質、波速固定，頻率變兩倍，波長？",["變兩倍","變一半","不變","變四倍"],1,"波速固定時，頻率與波長成反比。"],
-
-["同一介質、波速固定，波長變兩倍，頻率？",["變兩倍","變一半","不變","變四倍"],1,"頻率＝波速÷波長。"],
-
-["橫波的振動方向與傳播方向？",["平行","垂直","相同","無關"],1,"橫波的振動方向垂直於傳播方向。"],
-
-["縱波的振動方向與傳播方向？",["垂直","平行","相反且垂直","無關"],1,"縱波的振動方向平行於傳播方向。"],
-
-["波速15m/s、波長3m，頻率？",["45Hz","12Hz","5Hz","18Hz"],2,"15÷3＝5Hz。"]
+["波速固定，頻率加倍，波長？",["加倍","減半","不變","四倍"],1,"波速固定時，頻率與波長成反比。"]
 
 ];
 
-function update(){
+const bossQuestions=[
 
-document.getElementById("score").textContent=score;
+["波長4m、頻率5Hz，波速？",["9m/s","20m/s","1.25m/s","25m/s"],1,"4×5＝20m/s。"],
 
-document.getElementById("hp").textContent=hp;
+["波長3m、頻率6Hz，波速？",["18m/s","9m/s","2m/s","36m/s"],0,"3×6＝18m/s。"],
 
-document.getElementById("level").textContent=level;
+["波速24m/s、頻率6Hz，波長？",["30m","4m","18m","144m"],1,"24÷6＝4m。"],
 
-document.getElementById("time").textContent=time;
+["波速30m/s、波長5m，頻率？",["150Hz","25Hz","6Hz","35Hz"],2,"30÷5＝6Hz。"],
+
+["波長2m、頻率8Hz，波速？",["4m/s","10m/s","16m/s","6m/s"],2,"2×8＝16m/s。"]
+
+];
+
+function rand(a,b){return Math.random()*(b-a)+a}
+
+function getDinoLevel(){
+
+if(correct>=10)return 5;
+
+if(correct>=7)return 4;
+
+if(correct>=4)return 3;
+
+if(correct>=2)return 2;
+
+return 1;
 
 }
 
-function msg(t){document.getElementById("message").textContent=t;}
+function updateDino(){
 
-function nextQuestion(){
+let lv=getDinoLevel();
 
-if(!running)return;
+let names=[
 
-if(used.length===questions.length)used=[];
+"🦖 Lv.1 小恐龍",
 
-let pool=questions.map((_,i)=>i).filter(i=>!used.includes(i));
+"🦕 Lv.2 迅猛龍",
 
-let n=pool[Math.floor(Math.random()*pool.length)];
+"🛡️ Lv.3 裝甲龍",
 
-used.push(n);questionIndex=n;answered=false;
+"⚡ Lv.4 雷電龍",
 
-let q=questions[n];
+"🐉 Lv.5 傳說龍"
 
-document.getElementById("question").textContent=q[0];
+];
 
-document.getElementById("explain").textContent="";
+document.getElementById("dinoName").textContent=names[lv-1];
 
-document.getElementById("options").innerHTML="";
+document.getElementById("trainingInfo").textContent=
+
+lv===5?"傳說龍！雙護盾＋二段跳＋強化跳躍":
+
+lv===4?"雷電龍！強化跳躍＋二段跳":
+
+lv===3?"裝甲龍！開場護盾＋二段跳":
+
+lv===2?"迅猛龍！可以二段跳":
+
+"小恐龍！答對2題解鎖二段跳";
+
+document.getElementById("correct").textContent=correct;
+
+}
+
+function pickQuestion(boss=false){
+
+let arr=boss?bossQuestions:questions;
+
+let n=Math.floor(Math.random()*arr.length);
+
+if(arr.length>1){
+
+while(n===lastQuestion)n=Math.floor(Math.random()*arr.length);
+
+}
+
+lastQuestion=n;
+
+return arr[n];
+
+}
+
+function showTrainingQuestion(){
+
+let q=pickQuestion();
+
+currentQuestion=q;
+
+document.getElementById("trainQuestion").textContent=q[0];
+
+document.getElementById("trainExplain").textContent="";
+
+makeOptions("trainOptions",q,answerTraining);
+
+}
+
+function makeOptions(id,q,callback){
+
+let box=document.getElementById(id);
+
+box.innerHTML="";
 
 q[1].forEach((v,i)=>{
 
@@ -248,243 +426,451 @@ let b=document.createElement("button");
 
 b.textContent=String.fromCharCode(65+i)+"．"+v;
 
-b.onclick=()=>answer(i);
+b.onclick=()=>callback(i);
 
-document.getElementById("options").appendChild(b);
+box.appendChild(b);
 
 });
 
 }
 
-function answer(i){
+function answerTraining(i){
 
-if(!running||answered)return;
+let q=currentQuestion;
 
-answered=true;
+document.querySelectorAll("#trainOptions button")
 
-let q=questions[questionIndex];
+.forEach(b=>b.disabled=true);
 
 if(i===q[2]){
 
-score+=20;energy++;
+correct++;
 
-msg("✅ 答對！+20分　護盾能量 "+energy+"/3");
+updateDino();
 
-sound(700,.12);setTimeout(()=>sound(1000,.12),120);
+document.getElementById("trainExplain").textContent=
+
+"✅ 答對！"+q[3];
 
 }else{
 
-hp--;msg("❌ 答錯！生命 -1");
+document.getElementById("trainExplain").textContent=
 
-sound(180,.25);
-
-}
-
-document.getElementById("explain").textContent="💡 "+q[3];
-
-document.querySelectorAll(".options button").forEach(b=>b.disabled=true);
-
-update();
-
-if(hp<=0){endGame();return;}
-
-setTimeout(()=>{if(running)nextQuestion();},1800);
+"❌ 答錯！"+q[3];
 
 }
 
-function jump(){
+setTimeout(()=>{
 
-if(!running)return;
+if(state==="training")showTrainingQuestion();
 
-if(dino.y>=184){
-
-dino.vy=-12;
-
-sound(500,.08);
+},1100);
 
 }
 
+function updateStats(){
+
+document.getElementById("score").textContent=score;
+
+document.getElementById("revives").textContent=revives;
+
+document.getElementById("level").textContent=level;
+
+if(score>best){
+
+best=score;
+
+localStorage.setItem("dinoWaveBest",best);
+
+document.getElementById("best").textContent=best;
+
 }
-
-function useSkill(){
-
-if(!running)return;
-
-if(energy<3){msg("⚡ 答對3題才能使用護盾！");return;}
-
-energy-=3;shield=240;
-
-msg("🛡️ 無敵護盾啟動！");
-
-sound(950,.3,"sine");
 
 }
 
 function startGame(){
 
-running=true;score=0;hp=3;level=1;time=90;
+state="running";
 
-frame=0;speed=4;shield=0;energy=0;
+score=0;level=1;revives=0;
 
-obstacles=[];coins=[];particles=[];
+frame=0;speed=4;boost=0;
 
-dino.y=184;dino.vy=0;clock=0;
+obstacles=[];items=[];
 
-last=performance.now();boss=false;
+bossHP=0;bossActive=false;
 
-msg("🦖 出發！跳過石頭，回答理化題！");
+dino.y=185;dino.vy=0;dino.jumps=0;
 
-update();nextQuestion();
+shield=getDinoLevel()>=5?2:
 
-}
+getDinoLevel()>=3?1:0;
 
-function endGame(){
+document.getElementById("training").classList.add("hidden");
 
-running=false;
+document.getElementById("gameArea").classList.remove("hidden");
 
-msg("🏁 遊戲結束！總分："+score+"分，按開始再挑戰！");
+document.getElementById("quizArea").classList.add("hidden");
 
-sound(180,.4);
+document.getElementById("message").textContent="🦖 冒險開始！";
 
-}
-
-function collide(a,b){
-
-return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+updateStats();
 
 }
 
-function drawWave(){
+function jump(){
 
-ctx.strokeStyle="#5bc0de";ctx.lineWidth=2;
+if(state!=="running")return;
+
+let maxJumps=getDinoLevel()>=2?2:1;
+
+if(dino.jumps>=maxJumps)return;
+
+dino.vy=getDinoLevel()>=4?-13:-11;
+
+dino.jumps++;
+
+}
+
+function die(){
+
+if(shield>0){
+
+shield--;
+
+document.getElementById("message").textContent=
+
+"🛡️ 護盾抵擋一次傷害！";
+
+return;
+
+}
+
+if(revives>=2){
+
+gameOver();
+
+return;
+
+}
+
+state="quiz";
+
+questionMode="revive";
+
+showQuiz();
+
+}
+
+function showQuiz(){
+
+document.getElementById("quizArea").classList.remove("hidden");
+
+let q=pickQuestion(questionMode==="boss");
+
+currentQuestion=q;
+
+document.getElementById("quizTitle").textContent=
+
+questionMode==="boss"?"👾 Boss 波速挑戰":"❤️ 復活挑戰";
+
+document.getElementById("question").textContent=q[0];
+
+document.getElementById("explain").textContent="";
+
+makeOptions("options",q,answerQuiz);
+
+}
+
+function answerQuiz(i){
+
+let q=currentQuestion;
+
+document.querySelectorAll("#options button")
+
+.forEach(b=>b.disabled=true);
+
+let ok=i===q[2];
+
+document.getElementById("explain").textContent=
+
+(ok?"✅ 答對！":"❌ 答錯！")+q[3];
+
+if(questionMode==="revive"){
+
+if(ok){
+
+revives++;
+
+setTimeout(()=>{
+
+document.getElementById("quizArea").classList.add("hidden");
+
+obstacles=[];
+
+dino.y=185;dino.vy=0;dino.jumps=0;
+
+shield=Math.max(shield,1);
+
+state="running";
+
+updateStats();
+
+},1200);
+
+}else{
+
+setTimeout(gameOver,1200);
+
+}
+
+}else{
+
+if(ok){
+
+bossHP--;
+
+score+=50;
+
+}
+
+setTimeout(()=>{
+
+if(bossHP<=0){
+
+bossActive=false;
+
+score+=100;
+
+shield++;
+
+document.getElementById("quizArea").classList.add("hidden");
+
+state="running";
+
+updateStats();
+
+}else if(ok){
+
+showQuiz();
+
+}else{
+
+document.getElementById("quizArea").classList.add("hidden");
+
+state="running";
+
+}
+
+},1200);
+
+}
+
+}
+
+function gameOver(){
+
+state="over";
+
+document.getElementById("quizArea").classList.add("hidden");
+
+document.getElementById("message").textContent=
+
+"💀 遊戲結束！總分："+score+"分";
+
+updateStats();
+
+}
+
+function restart(){
+
+state="training";
+
+correct=0;revives=0;score=0;
+
+document.getElementById("training").classList.remove("hidden");
+
+document.getElementById("gameArea").classList.add("hidden");
+
+document.getElementById("quizArea").classList.add("hidden");
+
+updateDino();
+
+showTrainingQuestion();
+
+updateStats();
+
+}
+
+function collision(o){
+
+return dino.x<o.x+o.w &&
+
+dino.x+38>o.x &&
+
+dino.y<o.y+o.h &&
+
+dino.y+40>o.y;
+
+}
+
+function draw(){
+
+requestAnimationFrame(draw);
+
+ctx.clearRect(0,0,600,280);
+
+ctx.fillStyle="#dff6ff";
+
+ctx.fillRect(0,0,600,280);
+
+ctx.strokeStyle="#42b8db";
+
+ctx.lineWidth=3;
 
 ctx.beginPath();
 
 for(let x=0;x<=600;x+=4){
 
-let y=50+16*Math.sin((x+frame*2)/28);
+let y=55+18*Math.sin((x+frame*2)/35);
 
-if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+if(x===0)ctx.moveTo(x,y);
+
+else ctx.lineTo(x,y);
 
 }
 
 ctx.stroke();
 
-ctx.fillStyle="#31708e";
+ctx.fillStyle="#82ce8c";
 
-ctx.font="13px Arial";
+ctx.fillRect(0,230,600,50);
 
-ctx.fillText("🌊 波峰・波谷・波長・頻率・波速",12,20);
+ctx.font="14px Arial";
 
-}
+ctx.fillStyle="#176a86";
 
-function render(now){
+ctx.fillText("🌊 波峰・波谷・波長・頻率・波速",12,22);
 
-requestAnimationFrame(render);
+if(state==="running"){
 
-let dt=Math.min((now-last)/16.67||1,2);
+frame++;
 
-last=now;
+level=Math.floor(score/150)+1;
 
-ctx.clearRect(0,0,600,270);
+speed=4+Math.min(level*.4,3);
 
-ctx.fillStyle="#dff6ff";ctx.fillRect(0,0,600,270);
+dino.vy+=.6;
 
-drawWave();
+dino.y+=dino.vy;
 
-ctx.fillStyle="#91d79c";ctx.fillRect(0,229,600,41);
+if(dino.y>=185){
 
-ctx.fillStyle="#4caf50";ctx.fillRect(0,225,600,5);
+dino.y=185;
 
-if(running){
+dino.vy=0;
 
-frame+=dt;
-
-clock+=dt/60;
-
-if(clock>=1){
-
-time--;clock-=1;
-
-if(time<=0){time=0;endGame();}
-
-update();
+dino.jumps=0;
 
 }
 
-if(running){
+if(frame%95===0){
 
-level=Math.floor(score/120)+1;
+obstacles.push({
 
-speed=4+Math.min(level*.5,4);
+x:610,y:203,w:25,h:27
 
-if(shield>0)shield-=dt;
-
-dino.vy+=.65*dt;
-
-dino.y+=dino.vy*dt;
-
-if(dino.y>184){dino.y=184;dino.vy=0;}
-
-if(Math.floor(frame)%Math.max(58,Math.floor(110-speed*5))===0){
-
-obstacles.push({x:610,y:201,w:24,h:28,hit:false});
+});
 
 }
 
-if(Math.floor(frame)%105===0){
+if(frame%170===0){
 
-coins.push({x:610,y:150,w:20,h:20});
+items.push({
+
+x:610,y:150,w:25,h:25,
+
+type:Math.floor(Math.random()*3)
+
+});
 
 }
 
 obstacles.forEach(o=>{
 
-o.x-=speed*dt;
+o.x-=speed;
 
-if(!o.hit&&collide(dino,o)){
+if(collision(o)){
 
-o.hit=true;
+o.x=-100;
 
-if(shield<=0){
-
-hp--;msg("💥 撞到石頭！生命 -1");
-
-sound(160,.2);
-
-if(hp<=0)endGame();
-
-}else{score+=5;msg("🛡️ 護盾擋住石頭！");}
-
-update();
+die();
 
 }
 
 });
 
-coins.forEach(c=>{
+items.forEach(o=>{
 
-c.x-=speed*dt;
+o.x-=speed;
 
-if(!c.hit&&collide(dino,c)){
+if(collision(o)){
 
-c.hit=true;score+=5;sound(850,.08);update();
+o.x=-100;
+
+if(o.type===0)shield++;
+
+if(o.type===1)score+=30;
+
+if(o.type===2)boost=180;
 
 }
 
 });
 
-obstacles=obstacles.filter(o=>o.x>-40&&!o.hit);
+obstacles=obstacles.filter(o=>o.x>-40);
 
-coins=coins.filter(c=>c.x>-30&&!c.hit);
+items=items.filter(o=>o.x>-40);
+
+if(boost>0){
+
+boost--;
+
+score+=1;
 
 }
+
+if(frame%30===0)score+=5;
+
+if(score>=level*150 && !bossActive && frame>200){
+
+bossActive=true;
+
+bossHP=3;
+
+state="quiz";
+
+questionMode="boss";
+
+showQuiz();
+
+}
+
+updateStats();
 
 }
 
 ctx.font="43px Arial";
 
-ctx.fillText(shield>0?"🛡️":"🦖",dino.x,dino.y+39);
+let icon=getDinoLevel()>=5?"🐉":
+
+getDinoLevel()>=4?"⚡":
+
+getDinoLevel()>=3?"🦖":
+
+getDinoLevel()>=2?"🦕":"🦖";
+
+ctx.fillText(icon,dino.x,dino.y+40);
 
 obstacles.forEach(o=>{
 
@@ -502,45 +888,41 @@ ctx.fill();
 
 });
 
-coins.forEach(c=>{
+items.forEach(o=>{
 
-ctx.font="23px Arial";
+ctx.font="25px Arial";
 
-ctx.fillText("🪙",c.x,c.y+20);
+ctx.fillText(["🛡️","💰","⚡"][o.type],o.x,o.y+23);
 
 });
 
 if(shield>0){
 
-ctx.strokeStyle="#9c27b0";
+ctx.strokeStyle="#a35cff";
 
-ctx.lineWidth=4;
+ctx.lineWidth=3;
 
 ctx.beginPath();
 
-ctx.arc(dino.x+20,dino.y+22,34,0,Math.PI*2);
+ctx.arc(dino.x+20,dino.y+20,32,0,Math.PI*2);
 
 ctx.stroke();
 
 }
 
-if(level>=3&&running){
+if(bossActive){
 
-ctx.font="26px Arial";
+ctx.font="35px Arial";
 
-ctx.fillText("👾",520,100);
+ctx.fillText("👾",515,140);
 
-ctx.fillStyle="#c62828";
+ctx.fillStyle="#e74c3c";
 
-ctx.font="12px Arial";
-
-ctx.fillText("BOSS 區域",505,117);
+ctx.fillText("❤️".repeat(Math.max(0,bossHP)),480,175);
 
 }
 
 }
-
-requestAnimationFrame(render);
 
 canvas.addEventListener("pointerdown",jump);
 
@@ -548,13 +930,19 @@ document.addEventListener("keydown",e=>{
 
 if(e.code==="Space"){
 
-e.preventDefault();jump();
+e.preventDefault();
+
+jump();
 
 }
 
 });
 
-update();
+updateDino();
+
+showTrainingQuestion();
+
+draw();
 
 </script>
 
