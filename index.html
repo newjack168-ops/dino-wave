@@ -1,1 +1,2185 @@
+<!DOCTYPE html>
 
+<html lang="zh-Hant">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>小恐龍波動大冒險 4.0</title>
+
+<style>
+
+*{
+
+  box-sizing:border-box;
+
+  -webkit-tap-highlight-color:transparent;
+
+}
+
+body{
+
+  margin:0;
+
+  font-family:-apple-system,BlinkMacSystemFont,"Microsoft JhengHei",sans-serif;
+
+  background:linear-gradient(#dff4ff,#f8fcff);
+
+  text-align:center;
+
+  color:#234;
+
+}
+
+h1{
+
+  font-size:25px;
+
+  margin:12px 0 5px;
+
+  color:#1467a0;
+
+}
+
+.subtitle{
+
+  font-size:14px;
+
+  color:#567;
+
+  margin-bottom:10px;
+
+}
+
+.panel{
+
+  width:min(96%,760px);
+
+  margin:10px auto;
+
+  padding:15px;
+
+  background:white;
+
+  border-radius:18px;
+
+  box-shadow:0 5px 18px #b5c9d6;
+
+}
+
+.hidden{display:none!important}
+
+button{
+
+  border:0;
+
+  border-radius:13px;
+
+  padding:13px 20px;
+
+  font-size:18px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+  touch-action:manipulation;
+
+}
+
+.primary{
+
+  background:#1976d2;
+
+  color:white;
+
+}
+
+.green{
+
+  background:#2e9d56;
+
+  color:white;
+
+}
+
+.orange{
+
+  background:#f28c28;
+
+  color:white;
+
+}
+
+#question{
+
+  font-size:21px;
+
+  font-weight:bold;
+
+  margin:18px 0;
+
+  line-height:1.6;
+
+}
+
+.options{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:10px;
+
+}
+
+.option{
+
+  background:#edf5ff;
+
+  color:#234;
+
+  border:2px solid #c6ddf5;
+
+  min-height:66px;
+
+  font-size:17px;
+
+}
+
+.option:active{background:#c5e4ff}
+
+#feedback{
+
+  min-height:44px;
+
+  font-size:17px;
+
+  font-weight:bold;
+
+  margin-top:14px;
+
+  line-height:1.5;
+
+}
+
+#gameArea{
+
+  width:min(96%,760px);
+
+  margin:auto;
+
+}
+
+#gameCanvas{
+
+  width:100%;
+
+  display:block;
+
+  border:3px solid #3688ba;
+
+  border-radius:15px;
+
+  background:#e9f9ff;
+
+  touch-action:none;
+
+}
+
+.stats{
+
+  display:flex;
+
+  flex-wrap:wrap;
+
+  justify-content:center;
+
+  gap:8px;
+
+  margin:10px 0;
+
+}
+
+.stat{
+
+  background:white;
+
+  padding:8px 11px;
+
+  border-radius:10px;
+
+  font-size:15px;
+
+  font-weight:bold;
+
+}
+
+.controls{
+
+  display:flex;
+
+  gap:12px;
+
+  margin:12px auto;
+
+}
+
+.control{
+
+  flex:1;
+
+  height:92px;
+
+  font-size:25px;
+
+  color:white;
+
+  touch-action:none;
+
+  user-select:none;
+
+  -webkit-user-select:none;
+
+}
+
+#jumpBtn{background:#f28c28}
+
+#duckBtn{background:#1976d2}
+
+#duckBtn.pressed{background:#074c91}
+
+#message{
+
+  font-size:16px;
+
+  font-weight:bold;
+
+  min-height:25px;
+
+  color:#166b9c;
+
+}
+
+.small{
+
+  font-size:14px;
+
+  color:#667;
+
+  line-height:1.7;
+
+}
+
+#endPanel h2{color:#d64545}
+
+#evolution{
+
+  font-size:21px;
+
+  font-weight:bold;
+
+  color:#9a5a00;
+
+  margin:8px 0;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🦖 小恐龍波動大冒險 4.0</h1>
+
+<div class="subtitle">🐦 飛鳥要蹲下｜🪨 石頭要跳躍｜🚀 越跑越快</div>
+
+<section id="trainingPanel" class="panel">
+
+  <h2>📚 理化訓練營</h2>
+
+  <div id="evolution">🥚 Lv.1 小恐龍</div>
+
+  <p>
+
+    答對題數：
+
+    <b id="correctCount">0</b>
+
+    ／10
+
+  </p>
+
+  <div id="question"></div>
+
+  <div id="options" class="options"></div>
+
+  <div id="feedback"></div>
+
+  <button id="nextBtn" class="primary hidden">
+
+    下一題 ➜
+
+  </button>
+
+  <div style="margin-top:18px">
+
+    <button id="startBtn" class="green">
+
+      🏃 開始跑酷
+
+    </button>
+
+  </div>
+
+  <p class="small">
+
+    答對 2、4、7、10 題可進化。<br>
+
+    答題不限次數，想練習多久都可以。
+
+  </p>
+
+</section>
+
+<section id="gamePanel" class="hidden">
+
+  <div id="gameArea">
+
+    <div class="stats">
+
+      <div class="stat">🏆 分數：<span id="score">0</span></div>
+
+      <div class="stat">🚀 速度：<span id="speed">4</span></div>
+
+      <div class="stat">🎮 關卡：<span id="level">1</span></div>
+
+      <div class="stat">💎 寶石：<span id="gems">0</span></div>
+
+      <div class="stat">🛡️ 護盾：<span id="shield">0</span></div>
+
+    </div>
+
+    <canvas id="gameCanvas" width="720" height="330"></canvas>
+
+    <div id="message">準備出發！</div>
+
+    <div class="controls">
+
+      <button id="jumpBtn" class="control">
+
+        ⬆️ 跳躍
+
+      </button>
+
+      <button id="duckBtn" class="control">
+
+        ⬇️ 蹲下
+
+      </button>
+
+    </div>
+
+    <p class="small">
+
+      🪨 石頭：跳躍閃避<br>
+
+      🐦 飛鳥：按住蹲下，放開站起來<br>
+
+      ✨ 可以二段跳｜🛡️ 護盾可抵擋碰撞
+
+    </p>
+
+  </div>
+
+</section>
+
+<section id="endPanel" class="panel hidden">
+
+  <h2>💥 遊戲結束！</h2>
+
+  <p style="font-size:22px">
+
+    本次分數：<b id="finalScore">0</b>
+
+  </p>
+
+  <p>
+
+    🏆 最高分：
+
+    <b id="bestScore">0</b>
+
+  </p>
+
+  <p>
+
+    💎 收集寶石：
+
+    <b id="finalGems">0</b>
+
+  </p>
+
+  <button id="restartBtn" class="green">
+
+    🔄 重新挑戰
+
+  </button>
+
+</section>
+
+<div style="margin:14px">
+
+  <button id="soundBtn" class="primary">
+
+    🔊 音效：開
+
+  </button>
+
+</div>
+
+<script>
+
+"use strict";
+
+/* ==========================
+
+   1. 題庫
+
+========================== */
+
+const questionBank = [
+
+  ["波傳播時，主要傳遞的是什麼？","能量","物質","空氣","水滴",0],
+
+  ["波形最高的位置稱為？","波谷","波峰","波長","振幅",1],
+
+  ["波形最低的位置稱為？","波峰","頻率","波谷","週期",2],
+
+  ["相鄰兩個波峰之間的距離稱為？","波長","振幅","頻率","波速",0],
+
+  ["波每秒振動的次數稱為？","週期","頻率","波長","振幅",1],
+
+  ["頻率的單位是？","公尺","秒","赫茲","牛頓",2],
+
+  ["振動一次所需的時間稱為？","波速","週期","波長","振幅",1],
+
+  ["週期的單位是？","赫茲","秒","公尺","公斤",1],
+
+  ["波速等於？","頻率×波長","頻率÷波長","週期×頻率","振幅×波長",0],
+
+  ["頻率越高，週期通常？","越長","不變","越短","無限大",2],
+
+  ["橫波的振動方向與傳播方向？","平行","垂直","相同","無關",1],
+
+  ["縱波的振動方向與傳播方向？","垂直","平行","相反且垂直","一定向上",1],
+
+  ["聲波在空氣中主要屬於？","橫波","縱波","電磁波","光波",1],
+
+  ["光波屬於？","機械波","縱波","電磁波","水波",2],
+
+  ["聲音能在真空中傳播嗎？","可以","不可以","只有晚上可以","只有低音可以",1],
+
+  ["光能在真空中傳播嗎？","可以","不可以","只有白光可以","只有雷射可以",0],
+
+  ["聲音的高低主要由什麼決定？","振幅","頻率","速度","距離",1],
+
+  ["聲音的大小主要與什麼有關？","振幅","週期","波長","顏色",0],
+
+  ["音調越高，代表頻率？","越低","越高","不變","等於零",1],
+
+  ["聲音越大，通常代表振幅？","越小","越大","等於零","不變",1],
+
+  ["波長的常用單位是？","秒","赫茲","公尺","瓦特",2],
+
+  ["波速的常用單位是？","公尺／秒","秒","赫茲","公尺",0],
+
+  ["振幅是指？","最大位移","波峰間距","每秒振動次數","傳播速度",0],
+
+  ["波峰到平衡位置的距離稱為？","波長","振幅","週期","頻率",1],
+
+  ["頻率為2 Hz，表示每秒振動？","1次","2次","4次","10次",1],
+
+  ["頻率為5 Hz，表示每秒振動？","2次","5次","10次","20次",1],
+
+  ["週期為0.5秒，頻率為？","0.5 Hz","1 Hz","2 Hz","5 Hz",2],
+
+  ["週期為0.25秒，頻率為？","2 Hz","4 Hz","8 Hz","10 Hz",1],
+
+  ["頻率為10 Hz，週期為？","10秒","1秒","0.1秒","0.01秒",2],
+
+  ["頻率為4 Hz，週期為？","4秒","2秒","0.5秒","0.25秒",3],
+
+  ["波長2公尺、頻率3 Hz，波速為？","1公尺／秒","5公尺／秒","6公尺／秒","9公尺／秒",2],
+
+  ["波長4公尺、頻率2 Hz，波速為？","2公尺／秒","6公尺／秒","8公尺／秒","12公尺／秒",2],
+
+  ["波速12公尺／秒、頻率3 Hz，波長為？","3公尺","4公尺","9公尺","36公尺",1],
+
+  ["波速20公尺／秒、波長5公尺，頻率為？","2 Hz","4 Hz","5 Hz","100 Hz",1],
+
+  ["波長0.5公尺、頻率10 Hz，波速為？","0.05公尺／秒","2公尺／秒","5公尺／秒","20公尺／秒",2],
+
+  ["波速30公尺／秒、頻率5 Hz，波長為？","5公尺","6公尺","25公尺","150公尺",1],
+
+  ["波長3公尺、週期1秒，波速為？","1公尺／秒","2公尺／秒","3公尺／秒","6公尺／秒",2],
+
+  ["波長8公尺、週期2秒，波速為？","2公尺／秒","4公尺／秒","8公尺／秒","16公尺／秒",1],
+
+  ["頻率2 Hz、波速10公尺／秒，波長為？","2公尺","5公尺","10公尺","20公尺",1],
+
+  ["頻率5 Hz、波長3公尺，波速為？","8公尺／秒","10公尺／秒","15公尺／秒","20公尺／秒",2],
+
+  ["水面波向外傳播時，水面上的浮標主要會？","隨波一直向外跑","上下振動","消失","停止運動",1],
+
+  ["彈簧疏密波屬於？","縱波","橫波","光波","電磁波",0],
+
+  ["繩子上下振動形成的波通常是？","縱波","橫波","聲波","無法傳播的波",1],
+
+  ["地震波中的P波主要是？","縱波","橫波","光波","水波",0],
+
+  ["地震波中的S波主要是？","縱波","橫波","聲波","電磁波",1],
+
+  ["回聲是聲波發生什麼現象？","折射","反射","蒸發","燃燒",1],
+
+  ["聲波遇到牆壁反彈，是？","反射","折射","熔化","吸熱",0],
+
+  ["波進入不同介質時，傳播速度可能？","改變","永遠不變","一定變零","一定無限大",0],
+
+  ["同一介質中，波速固定時，頻率增加，波長會？","增加","減少","不變","變成零",1],
+
+  ["同一介質中，波速固定時，頻率減半，波長會？","減半","加倍","不變","變成零",1],
+
+  ["人耳能聽到的聲音需要什麼傳入耳朵？","聲波","光波","電流","磁鐵",0],
+
+  ["超音波的頻率比一般人耳可聽上限？","低","高","相同","一定為零",1],
+
+  ["低音通常代表聲波頻率？","較低","較高","無限大","等於零",0],
+
+  ["用力敲鼓，聲音通常較大，主要因為？","振幅較大","頻率一定較高","波速變零","波長一定變短",0],
+
+  ["輕敲與重敲同一面鼓，主要改變的是？","聲音大小","空氣種類","真空程度","光速",0],
+
+  ["聲波傳播通常需要？","介質","陽光","磁場","電池",0],
+
+  ["光波與聲波最大的差別之一是？","光可在真空傳播","聲可在真空傳播","光一定需要空氣","兩者都不能在真空傳播",0],
+
+  ["週期與頻率的關係是？","互為倒數","完全相同","相加為零","相乘為零",0],
+
+  ["波長為6公尺、頻率2 Hz，波速為？","3公尺／秒","8公尺／秒","12公尺／秒","16公尺／秒",2],
+
+  ["波速24公尺／秒、波長6公尺，頻率為？","2 Hz","4 Hz","6 Hz","24 Hz",1]
+
+];
+
+/* ==========================
+
+   2. 畫面元素
+
+========================== */
+
+const $ = id => document.getElementById(id);
+
+const trainingPanel = $("trainingPanel");
+
+const gamePanel = $("gamePanel");
+
+const endPanel = $("endPanel");
+
+const canvas = $("gameCanvas");
+
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+
+const H = canvas.height;
+
+const GROUND = 275;
+
+/* ==========================
+
+   3. 音效
+
+========================== */
+
+let soundOn = true;
+
+let audioCtx = null;
+
+function unlockAudio(){
+
+  if(!soundOn)return;
+
+  try{
+
+    if(!audioCtx){
+
+      audioCtx = new (
+
+        window.AudioContext ||
+
+        window.webkitAudioContext
+
+      )();
+
+    }
+
+    if(audioCtx.state==="suspended"){
+
+      audioCtx.resume();
+
+    }
+
+  }catch(e){}
+
+}
+
+function beep(freq=440,duration=0.12,type="sine",volume=0.12){
+
+  if(!soundOn)return;
+
+  try{
+
+    unlockAudio();
+
+    if(!audioCtx)return;
+
+    const osc = audioCtx.createOscillator();
+
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+
+    osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
+
+    gain.gain.setValueAtTime(
+
+      volume,
+
+      audioCtx.currentTime
+
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+
+      0.001,
+
+      audioCtx.currentTime+duration
+
+    );
+
+    osc.connect(gain);
+
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+
+    osc.stop(audioCtx.currentTime+duration);
+
+  }catch(e){}
+
+}
+
+function playCorrect(){
+
+  beep(650,0.1);
+
+  setTimeout(()=>beep(900,0.15),100);
+
+}
+
+function playWrong(){
+
+  beep(180,0.2,"sawtooth",0.08);
+
+}
+
+function playEvolve(){
+
+  beep(450,0.12);
+
+  setTimeout(()=>beep(600,0.12),130);
+
+  setTimeout(()=>beep(850,0.18),260);
+
+  setTimeout(()=>beep(1100,0.3),400);
+
+}
+
+function playJump(){
+
+  beep(480,0.11,"square",0.055);
+
+}
+
+function playItem(){
+
+  beep(900,0.09);
+
+  setTimeout(()=>beep(1200,0.12),90);
+
+}
+
+function playHit(){
+
+  beep(120,0.35,"sawtooth",0.12);
+
+}
+
+$("soundBtn").onclick=()=>{
+
+  soundOn=!soundOn;
+
+  $("soundBtn").textContent=
+
+    soundOn?"🔊 音效：開":"🔇 音效：關";
+
+  if(soundOn){
+
+    unlockAudio();
+
+    beep(750,0.12);
+
+  }
+
+};
+
+/* ==========================
+
+   4. 訓練營與進化
+
+========================== */
+
+let correct=0;
+
+let evolutionLevel=1;
+
+let usedQuestions=[];
+
+let currentQuestion=null;
+
+let answered=false;
+
+const evolutionNames=[
+
+  "",
+
+  "🥚 Lv.1 小恐龍",
+
+  "🦖 Lv.2 強壯恐龍",
+
+  "🦕 Lv.3 巨型恐龍",
+
+  "🐲 Lv.4 神龍",
+
+  "🐉 Lv.5 傳說龍"
+
+];
+
+function getEvolutionLevel(n){
+
+  if(n>=10)return 5;
+
+  if(n>=7)return 4;
+
+  if(n>=4)return 3;
+
+  if(n>=2)return 2;
+
+  return 1;
+
+}
+
+function updateEvolution(){
+
+  const newLevel=getEvolutionLevel(correct);
+
+  if(newLevel>evolutionLevel){
+
+    evolutionLevel=newLevel;
+
+    playEvolve();
+
+    $("feedback").textContent=
+
+      "🎉 恭喜進化！"+evolutionNames[evolutionLevel];
+
+  }
+
+  $("evolution").textContent=
+
+    evolutionNames[evolutionLevel];
+
+  $("correctCount").textContent=correct;
+
+}
+
+function shuffle(arr){
+
+  for(let i=arr.length-1;i>0;i--){
+
+    const j=Math.floor(Math.random()*(i+1));
+
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+
+  }
+
+  return arr;
+
+}
+
+function nextQuestion(){
+
+  answered=false;
+
+  $("nextBtn").classList.add("hidden");
+
+  $("feedback").textContent="";
+
+  if(usedQuestions.length===0){
+
+    usedQuestions=shuffle(
+
+      questionBank.map((_,i)=>i)
+
+    );
+
+  }
+
+  const index=usedQuestions.pop();
+
+  currentQuestion=questionBank[index];
+
+  $("question").textContent=currentQuestion[0];
+
+  const options=$("options");
+
+  options.innerHTML="";
+
+  const order=shuffle([0,1,2,3]);
+
+  order.forEach(i=>{
+
+    const btn=document.createElement("button");
+
+    btn.className="option";
+
+    btn.textContent=currentQuestion[i+1];
+
+    btn.onclick=()=>answerQuestion(i);
+
+    options.appendChild(btn);
+
+  });
+
+}
+
+function answerQuestion(i){
+
+  if(answered)return;
+
+  unlockAudio();
+
+  answered=true;
+
+  const right=currentQuestion[5];
+
+  if(i===right){
+
+    correct++;
+
+    playCorrect();
+
+    $("feedback").textContent="✅ 答對了！";
+
+    updateEvolution();
+
+  }else{
+
+    playWrong();
+
+    $("feedback").textContent=
+
+      "❌ 答錯了！正確答案："+currentQuestion[right+1];
+
+  }
+
+  $("nextBtn").classList.remove("hidden");
+
+}
+
+$("nextBtn").onclick=nextQuestion;
+
+/* ==========================
+
+   5. 遊戲狀態
+
+========================== */
+
+let running=false;
+
+let frame=0;
+
+let score=0;
+
+let speed=4;
+
+let level=1;
+
+let gems=0;
+
+let shields=0;
+
+let distance=0;
+
+let obstacles=[];
+
+let items=[];
+
+let particles=[];
+
+let spawnTimer=90;
+
+let itemTimer=220;
+
+let ducking=false;
+
+let lastTime=0;
+
+let animationId=0;
+
+const dino={
+
+  x:105,
+
+  y:GROUND-60,
+
+  w:54,
+
+  h:60,
+
+  vy:0,
+
+  jumps:0,
+
+  onGround:true
+
+};
+
+let best=0;
+
+try{
+
+  best=Number(
+
+    localStorage.getItem("dinoWaveBest4")||0
+
+  );
+
+}catch(e){}
+
+function resetGame(){
+
+  frame=0;
+
+  score=0;
+
+  speed=4;
+
+  level=1;
+
+  gems=0;
+
+  distance=0;
+
+  obstacles=[];
+
+  items=[];
+
+  particles=[];
+
+  spawnTimer=100;
+
+  itemTimer=210;
+
+  ducking=false;
+
+  dino.y=GROUND-60;
+
+  dino.vy=0;
+
+  dino.jumps=0;
+
+  dino.onGround=true;
+
+  // 高等級恐龍開場有護盾
+
+  shields=evolutionLevel>=4?1:0;
+
+  updateStats();
+
+}
+
+function updateStats(){
+
+  $("score").textContent=Math.floor(score);
+
+  $("speed").textContent=speed.toFixed(1);
+
+  $("level").textContent=level;
+
+  $("gems").textContent=gems;
+
+  $("shield").textContent=shields;
+
+}
+
+function startGame(){
+
+  unlockAudio();
+
+  trainingPanel.classList.add("hidden");
+
+  endPanel.classList.add("hidden");
+
+  gamePanel.classList.remove("hidden");
+
+  resetGame();
+
+  running=true;
+
+  lastTime=0;
+
+  $("message").textContent=
+
+    "🦖 "+evolutionNames[evolutionLevel]+" 出發！";
+
+  beep(550,0.12);
+
+  setTimeout(()=>beep(750,0.15),120);
+
+  cancelAnimationFrame(animationId);
+
+  animationId=requestAnimationFrame(loop);
+
+}
+
+$("startBtn").onclick=startGame;
+
+/* ==========================
+
+   6. 跳躍與蹲下
+
+========================== */
+
+function jump(){
+
+  if(!running)return;
+
+  unlockAudio();
+
+  if(dino.jumps>=2)return;
+
+  // 蹲下時不能跳
+
+  if(ducking)return;
+
+  dino.vy=dino.jumps===0?-13.5:-12.5;
+
+  dino.jumps++;
+
+  dino.onGround=false;
+
+  playJump();
+
+}
+
+function setDuck(value){
+
+  if(!running)return;
+
+  ducking=value;
+
+  $("duckBtn").classList.toggle("pressed",value);
+
+}
+
+$("jumpBtn").addEventListener("pointerdown",e=>{
+
+  e.preventDefault();
+
+  jump();
+
+});
+
+$("duckBtn").addEventListener("pointerdown",e=>{
+
+  e.preventDefault();
+
+  unlockAudio();
+
+  try{
+
+    $("duckBtn").setPointerCapture(e.pointerId);
+
+  }catch(err){}
+
+  setDuck(true);
+
+});
+
+$("duckBtn").addEventListener("pointerup",e=>{
+
+  e.preventDefault();
+
+  setDuck(false);
+
+});
+
+$("duckBtn").addEventListener("pointercancel",()=>{
+
+  setDuck(false);
+
+});
+
+$("duckBtn").addEventListener("lostpointercapture",()=>{
+
+  setDuck(false);
+
+});
+
+window.addEventListener("blur",()=>{
+
+  ducking=false;
+
+  $("duckBtn").classList.remove("pressed");
+
+});
+
+// 電腦也能玩
+
+document.addEventListener("keydown",e=>{
+
+  if(e.code==="Space"||e.code==="ArrowUp"){
+
+    e.preventDefault();
+
+    if(!e.repeat)jump();
+
+  }
+
+  if(e.code==="ArrowDown"){
+
+    e.preventDefault();
+
+    setDuck(true);
+
+  }
+
+});
+
+document.addEventListener("keyup",e=>{
+
+  if(e.code==="ArrowDown"){
+
+    setDuck(false);
+
+  }
+
+});
+
+/* ==========================
+
+   7. 障礙物與掉寶
+
+========================== */
+
+function spawnObstacle(){
+
+  // 第二關開始才有飛鳥
+
+  const canBird=level>=2;
+
+  const isBird=
+
+    canBird&&Math.random()<0.42;
+
+  if(isBird){
+
+    obstacles.push({
+
+      type:"bird",
+
+      x:W+30,
+
+      y:GROUND-66,
+
+      w:57,
+
+      h:27,
+
+      flap:0
+
+    });
+
+  }else{
+
+    obstacles.push({
+
+      type:"rock",
+
+      x:W+30,
+
+      y:GROUND-38,
+
+      w:39,
+
+      h:38
+
+    });
+
+  }
+
+}
+
+function spawnItem(){
+
+  const r=Math.random();
+
+  let type="gem";
+
+  if(r<0.16)type="shield";
+
+  else if(r<0.25)type="boost";
+
+  items.push({
+
+    type,
+
+    x:W+30,
+
+    y:GROUND-110-Math.random()*35,
+
+    w:30,
+
+    h:30,
+
+    phase:Math.random()*6
+
+  });
+
+}
+
+function intersects(a,b){
+
+  return (
+
+    a.x<b.x+b.w &&
+
+    a.x+a.w>b.x &&
+
+    a.y<b.y+b.h &&
+
+    a.y+a.h>b.y
+
+  );
+
+}
+
+function dinoHitbox(){
+
+  const h=ducking&&dino.onGround?32:60;
+
+  return {
+
+    x:dino.x+10,
+
+    y:dino.y+(60-h)+5,
+
+    w:dino.w-19,
+
+    h:h-10
+
+  };
+
+}
+
+function hitObstacle(index){
+
+  obstacles.splice(index,1);
+
+  if(shields>0){
+
+    shields--;
+
+    playHit();
+
+    $("message").textContent=
+
+      "🛡️ 護盾抵擋一次碰撞！";
+
+    return;
+
+  }
+
+  gameOver();
+
+}
+
+function collectItem(index){
+
+  const item=items[index];
+
+  if(item.type==="gem"){
+
+    gems++;
+
+    score+=100;
+
+    $("message").textContent=
+
+      "💎 獲得寶石！+100分";
+
+  }
+
+  if(item.type==="shield"){
+
+    shields=Math.min(3,shields+1);
+
+    $("message").textContent=
+
+      "🛡️ 獲得護盾！";
+
+  }
+
+  if(item.type==="boost"){
+
+    score+=250;
+
+    $("message").textContent=
+
+      "⚡ 能量獎勵！+250分";
+
+  }
+
+  playItem();
+
+  items.splice(index,1);
+
+}
+
+/* ==========================
+
+   8. 速度與關卡
+
+========================== */
+
+function updateDifficulty(){
+
+  // 每累積一定距離升一關
+
+  level=Math.min(
+
+    20,
+
+    Math.floor(distance/850)+1
+
+  );
+
+  // 速度由4逐漸增加至12
+
+  speed=Math.min(
+
+    12,
+
+    4+distance/1050
+
+  );
+
+}
+
+/* ==========================
+
+   9. 遊戲更新
+
+========================== */
+
+function update(dt){
+
+  frame+=dt;
+
+  distance+=speed*dt;
+
+  score+=speed*0.09*dt;
+
+  updateDifficulty();
+
+  // 重力
+
+  dino.vy+=0.66*dt;
+
+  dino.y+=dino.vy*dt;
+
+  if(dino.y>=GROUND-60){
+
+    dino.y=GROUND-60;
+
+    dino.vy=0;
+
+    dino.jumps=0;
+
+    dino.onGround=true;
+
+  }else{
+
+    dino.onGround=false;
+
+  }
+
+  // 產生障礙物
+
+  spawnTimer-=dt;
+
+  if(spawnTimer<=0){
+
+    spawnObstacle();
+
+    // 速度越快，障礙物間隔越短
+
+    spawnTimer=
+
+      Math.max(52,130-speed*5)+
+
+      Math.random()*45;
+
+  }
+
+  // 產生掉寶
+
+  itemTimer-=dt;
+
+  if(itemTimer<=0){
+
+    spawnItem();
+
+    itemTimer=190+Math.random()*140;
+
+  }
+
+  const hitbox=dinoHitbox();
+
+  for(let i=obstacles.length-1;i>=0;i--){
+
+    const o=obstacles[i];
+
+    o.x-=speed*dt;
+
+    if(o.type==="bird"){
+
+      o.flap+=0.25*dt;
+
+    }
+
+    if(o.x+o.w<0){
+
+      obstacles.splice(i,1);
+
+      continue;
+
+    }
+
+    if(intersects(hitbox,o)){
+
+      hitObstacle(i);
+
+      if(!running)return;
+
+    }
+
+  }
+
+  for(let i=items.length-1;i>=0;i--){
+
+    const item=items[i];
+
+    item.x-=speed*dt;
+
+    item.phase+=0.08*dt;
+
+    if(item.x+item.w<0){
+
+      items.splice(i,1);
+
+      continue;
+
+    }
+
+    const box={
+
+      x:item.x,
+
+      y:item.y+Math.sin(item.phase)*6,
+
+      w:item.w,
+
+      h:item.h
+
+    };
+
+    if(intersects(hitbox,box)){
+
+      collectItem(i);
+
+    }
+
+  }
+
+  updateStats();
+
+}
+
+/* ==========================
+
+   10. 畫面繪製
+
+========================== */
+
+function drawBackground(){
+
+  const sky=ctx.createLinearGradient(0,0,0,H);
+
+  sky.addColorStop(0,"#a9e4ff");
+
+  sky.addColorStop(1,"#effcff");
+
+  ctx.fillStyle=sky;
+
+  ctx.fillRect(0,0,W,H);
+
+  // 太陽
+
+  ctx.fillStyle="#ffe16b";
+
+  ctx.beginPath();
+
+  ctx.arc(620,65,30,0,Math.PI*2);
+
+  ctx.fill();
+
+  // 雲朵
+
+  for(let i=0;i<4;i++){
+
+    const x=(
+
+      i*220+110-distance*0.12
+
+    )%950;
+
+    const px=(x+950)%950-80;
+
+    const py=48+(i%2)*45;
+
+    ctx.fillStyle="rgba(255,255,255,.85)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(px,py,43,16,0,0,Math.PI*2);
+
+    ctx.fill();
+
+  }
+
+  // 遠山
+
+  ctx.fillStyle="#b6dfc7";
+
+  ctx.beginPath();
+
+  ctx.moveTo(0,GROUND);
+
+  for(let x=0;x<=W+100;x+=100){
+
+    ctx.lineTo(
+
+      x,
+
+      GROUND-55-(x%200===0?15:0)
+
+    );
+
+    ctx.lineTo(x+100,GROUND);
+
+  }
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  // 地面
+
+  ctx.fillStyle="#86c46e";
+
+  ctx.fillRect(0,GROUND,W,H-GROUND);
+
+  ctx.fillStyle="#548d46";
+
+  ctx.fillRect(0,GROUND,W,5);
+
+  // 地面移動線條
+
+  ctx.fillStyle="#4e9b47";
+
+  const offset=distance%60;
+
+  for(let x=-60;x<W+60;x+=60){
+
+    ctx.fillRect(x-offset,GROUND+23,24,4);
+
+  }
+
+}
+
+function drawDino(){
+
+  const h=ducking&&dino.onGround?32:60;
+
+  const y=dino.y+(60-h);
+
+  const colors=[
+
+    "",
+
+    "#63b84e",
+
+    "#318e48",
+
+    "#358caa",
+
+    "#9358bd",
+
+    "#e2a321"
+
+  ];
+
+  ctx.save();
+
+  // 護盾光圈
+
+  if(shields>0){
+
+    ctx.strokeStyle="rgba(34,125,255,.7)";
+
+    ctx.lineWidth=4;
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+
+      dino.x+27,
+
+      y+h/2,
+
+      39,
+
+      h/2+12,
+
+      0,0,Math.PI*2
+
+    );
+
+    ctx.stroke();
+
+  }
+
+  ctx.fillStyle=colors[evolutionLevel];
+
+  // 身體
+
+  ctx.fillRect(
+
+    dino.x+7,
+
+    y+h*0.32,
+
+    37,
+
+    h*0.52
+
+  );
+
+  // 頭
+
+  ctx.fillRect(
+
+    dino.x+25,
+
+    y,
+
+    29,
+
+    h*0.48
+
+  );
+
+  // 尾巴
+
+  ctx.beginPath();
+
+  ctx.moveTo(dino.x+10,y+h*0.58);
+
+  ctx.lineTo(dino.x-15,y+h*0.42);
+
+  ctx.lineTo(dino.x+9,y+h*0.79);
+
+  ctx.fill();
+
+  // 腳
+
+  if(!ducking||!dino.onGround){
+
+    const step=Math.sin(frame*0.4)*6;
+
+    ctx.fillRect(
+
+      dino.x+13,
+
+      y+h*0.79,
+
+      10,
+
+      h*0.21+step
+
+    );
+
+    ctx.fillRect(
+
+      dino.x+32,
+
+      y+h*0.79,
+
+      10,
+
+      h*0.21-step
+
+    );
+
+  }
+
+  // 眼睛
+
+  ctx.fillStyle="white";
+
+  ctx.fillRect(
+
+    dino.x+43,
+
+    y+Math.max(5,h*0.12),
+
+    7,7
+
+  );
+
+  ctx.fillStyle="#111";
+
+  ctx.fillRect(
+
+    dino.x+47,
+
+    y+Math.max(7,h*0.14),
+
+    3,3
+
+  );
+
+  // 進化尖刺
+
+  if(evolutionLevel>=2){
+
+    ctx.fillStyle="#ffe48b";
+
+    for(let i=0;i<3;i++){
+
+      ctx.beginPath();
+
+      ctx.moveTo(dino.x+12+i*12,y+h*0.34);
+
+      ctx.lineTo(dino.x+17+i*12,y+h*0.13);
+
+      ctx.lineTo(dino.x+23+i*12,y+h*0.34);
+
+      ctx.fill();
+
+    }
+
+  }
+
+  // 高等級龍角
+
+  if(evolutionLevel>=4){
+
+    ctx.fillStyle="#f4e1ff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(dino.x+30,y+4);
+
+    ctx.lineTo(dino.x+28,y-18);
+
+    ctx.lineTo(dino.x+42,y+4);
+
+    ctx.fill();
+
+  }
+
+  // 傳說龍翅膀
+
+  if(evolutionLevel===5){
+
+    ctx.fillStyle="#f6c94e";
+
+    ctx.beginPath();
+
+    ctx.moveTo(dino.x+14,y+h*0.5);
+
+    ctx.lineTo(dino.x-15,y-20);
+
+    ctx.lineTo(dino.x+2,y+h*0.15);
+
+    ctx.lineTo(dino.x+20,y+h*0.25);
+
+    ctx.fill();
+
+  }
+
+  ctx.restore();
+
+}
+
+function drawRock(o){
+
+  ctx.fillStyle="#777d87";
+
+  ctx.beginPath();
+
+  ctx.moveTo(o.x,o.y+o.h);
+
+  ctx.lineTo(o.x+5,o.y+13);
+
+  ctx.lineTo(o.x+18,o.y);
+
+  ctx.lineTo(o.x+33,o.y+9);
+
+  ctx.lineTo(o.x+o.w,o.y+o.h);
+
+  ctx.closePath();
+
+  ctx.fill();
+
+  ctx.fillStyle="#aeb5be";
+
+  ctx.fillRect(o.x+12,o.y+14,10,5);
+
+}
+
+function drawBird(o){
+
+  const flap=Math.sin(o.flap)*12;
+
+  // 鳥身
+
+  ctx.fillStyle="#784f98";
+
+  ctx.beginPath();
+
+  ctx.ellipse(
+
+    o.x+27,
+
+    o.y+14,
+
+    22,12,
+
+    0,0,Math.PI*2
+
+  );
+
+  ctx.fill();
+
+  // 翅膀
+
+  ctx.fillStyle="#a67ac5";
+
+  ctx.beginPath();
+
+  ctx.moveTo(o.x+23,o.y+14);
+
+  ctx.lineTo(o.x+8,o.y-8+flap);
+
+  ctx.lineTo(o.x+42,o.y+8);
+
+  ctx.fill();
+
+  // 鳥嘴
+
+  ctx.fillStyle="#ffc247";
+
+  ctx.beginPath();
+
+  ctx.moveTo(o.x+48,o.y+11);
+
+  ctx.lineTo(o.x+65,o.y+15);
+
+  ctx.lineTo(o.x+48,o.y+19);
+
+  ctx.fill();
+
+  // 眼睛
+
+  ctx.fillStyle="white";
+
+  ctx.beginPath();
+
+  ctx.arc(o.x+42,o.y+10,4,0,Math.PI*2);
+
+  ctx.fill();
+
+  ctx.fillStyle="#111";
+
+  ctx.beginPath();
+
+  ctx.arc(o.x+43,o.y+10,2,0,Math.PI*2);
+
+  ctx.fill();
+
+}
+
+function drawItem(item){
+
+  const y=item.y+Math.sin(item.phase)*6;
+
+  ctx.font="29px Arial";
+
+  ctx.textAlign="center";
+
+  const icons={
+
+    gem:"💎",
+
+    shield:"🛡️",
+
+    boost:"⚡"
+
+  };
+
+  ctx.fillText(
+
+    icons[item.type],
+
+    item.x+15,
+
+    y+27
+
+  );
+
+}
+
+function draw(){
+
+  ctx.clearRect(0,0,W,H);
+
+  drawBackground();
+
+  obstacles.forEach(o=>{
+
+    if(o.type==="bird"){
+
+      drawBird(o);
+
+    }else{
+
+      drawRock(o);
+
+    }
+
+  });
+
+  items.forEach(drawItem);
+
+  drawDino();
+
+  // 上方關卡提示
+
+  ctx.fillStyle="rgba(255,255,255,.75)";
+
+  ctx.fillRect(12,10,185,34);
+
+  ctx.fillStyle="#20547a";
+
+  ctx.font="bold 19px Arial";
+
+  ctx.textAlign="left";
+
+  ctx.fillText(
+
+    "第 "+level+" 關  🚀 "+speed.toFixed(1),
+
+    22,34
+
+  );
+
+  if(level>=2){
+
+    ctx.fillStyle="#8d368d";
+
+    ctx.font="bold 15px Arial";
+
+    ctx.fillText("🐦 小心飛鳥！",500,32);
+
+  }
+
+}
+
+/* ==========================
+
+   11. 遊戲主循環
+
+========================== */
+
+function loop(time){
+
+  if(!running)return;
+
+  if(!lastTime)lastTime=time;
+
+  // 限制單次更新幅度，避免切換頁面時突然暴衝
+
+  const dt=Math.min(
+
+    (time-lastTime)/16.667,
+
+    2
+
+  );
+
+  lastTime=time;
+
+  update(dt);
+
+  draw();
+
+  if(running){
+
+    animationId=requestAnimationFrame(loop);
+
+  }
+
+}
+
+/* ==========================
+
+   12. 死亡與重新挑戰
+
+========================== */
+
+function gameOver(){
+
+  running=false;
+
+  ducking=false;
+
+  playHit();
+
+  const final=Math.floor(score);
+
+  if(final>best){
+
+    best=final;
+
+    try{
+
+      localStorage.setItem(
+
+        "dinoWaveBest4",
+
+        String(best)
+
+      );
+
+    }catch(e){}
+
+  }
+
+  $("finalScore").textContent=final;
+
+  $("bestScore").textContent=best;
+
+  $("finalGems").textContent=gems;
+
+  $("duckBtn").classList.remove("pressed");
+
+  gamePanel.classList.add("hidden");
+
+  endPanel.classList.remove("hidden");
+
+}
+
+$("restartBtn").onclick=()=>{
+
+  unlockAudio();
+
+  endPanel.classList.add("hidden");
+
+  gamePanel.classList.add("hidden");
+
+  trainingPanel.classList.remove("hidden");
+
+  correct=0;
+
+  evolutionLevel=1;
+
+  usedQuestions=[];
+
+  $("evolution").textContent=evolutionNames[1];
+
+  $("correctCount").textContent="0";
+
+  nextQuestion();
+
+};
+
+/* ==========================
+
+   13. 初始化
+
+========================== */
+
+nextQuestion();
+
+document.addEventListener(
+
+  "touchmove",
+
+  e=>{
+
+    if(e.target.closest(".controls")){
+
+      e.preventDefault();
+
+    }
+
+  },
+
+  {passive:false}
+
+);
+
+</script>
+
+</body>
+
+</html>
