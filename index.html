@@ -1,1 +1,1629 @@
+<!DOCTYPE html>
 
+<html lang="zh-Hant">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+
+<title>🦖 小恐龍波動大冒險 3.0</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{
+
+margin:0;
+
+background:linear-gradient(#dff6ff,#efffe9);
+
+font-family:Arial,"Microsoft JhengHei",sans-serif;
+
+color:#234;
+
+text-align:center;
+
+}
+
+.wrap{max-width:650px;margin:auto;padding:12px}
+
+h1{font-size:25px;color:#087d66}
+
+.card{
+
+background:white;
+
+border-radius:18px;
+
+padding:16px;
+
+margin:12px 0;
+
+box-shadow:0 4px 15px #b8d6df;
+
+}
+
+button{
+
+border:0;
+
+border-radius:12px;
+
+padding:13px 16px;
+
+margin:5px;
+
+font-size:17px;
+
+font-weight:bold;
+
+background:#16a085;
+
+color:white;
+
+cursor:pointer;
+
+touch-action:manipulation;
+
+}
+
+button:disabled{opacity:.5}
+
+.stats{
+
+display:flex;
+
+justify-content:space-around;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+font-weight:bold;
+
+}
+
+canvas{
+
+width:100%;
+
+height:auto;
+
+border-radius:12px;
+
+background:#dff6ff;
+
+touch-action:manipulation;
+
+}
+
+.jump{
+
+background:#ff9800;
+
+font-size:24px;
+
+width:90%;
+
+}
+
+.options{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:8px;
+
+margin-top:15px;
+
+}
+
+.options button{
+
+background:#2980b9;
+
+font-size:16px;
+
+min-height:62px;
+
+margin:0;
+
+}
+
+#trainQuestion{
+
+font-size:21px;
+
+font-weight:bold;
+
+line-height:1.6;
+
+margin:18px 0;
+
+}
+
+#trainExplain{
+
+font-size:17px;
+
+line-height:1.6;
+
+min-height:50px;
+
+}
+
+.hidden{display:none!important}
+
+.badge{
+
+display:inline-block;
+
+background:#e8f8f0;
+
+border-radius:10px;
+
+padding:10px;
+
+margin:5px;
+
+font-weight:bold;
+
+}
+
+#message{
+
+color:#d35400;
+
+font-size:19px;
+
+font-weight:bold;
+
+margin:12px;
+
+}
+
+.note{color:#607d8b;font-size:14px}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>🦖 小恐龍波動大冒險 3.0</h1>
+
+<div class="card stats">
+
+<span>⭐ <span id="score">0</span></span>
+
+<span>❤️ 1條命</span>
+
+<span>🏁 第<span id="level">1</span>關</span>
+
+<span>🏆 <span id="best">0</span></span>
+
+</div>
+
+<div class="card">
+
+<h2 id="dinoName">🦖 Lv.1 小恐龍</h2>
+
+<p id="trainingInfo">答對題目，強化恐龍！</p>
+
+<button id="soundBtn" onclick="toggleSound()">🔊 音效開啟</button>
+
+</div>
+
+<div class="card" id="training">
+
+<h2>📚 恐龍進化訓練營</h2>
+
+<p>無限答題！答對10題進化傳說龍！</p>
+
+<div class="badge">
+
+答對：<span id="correct">0</span>題
+
+</div>
+
+<div class="badge">
+
+題庫：60題
+
+</div>
+
+<div id="trainQuestion"></div>
+
+<div class="options" id="trainOptions"></div>
+
+<p id="trainExplain"></p>
+
+<button onclick="startGame()">▶ 開始冒險</button>
+
+<p class="note">答錯不扣分，隨時可以開始跑酷。</p>
+
+</div>
+
+<div class="card hidden" id="gameArea">
+
+<canvas id="game" width="600" height="280"></canvas>
+
+<button class="jump" onclick="jump()">🦖 跳躍！</button>
+
+<div id="message">準備冒險！</div>
+
+<button onclick="restart()">🔄 返回訓練營</button>
+
+</div>
+
+</div>
+
+<script>
+
+"use strict";
+
+const canvas=document.getElementById("game");
+
+const ctx=canvas.getContext("2d");
+
+let state="training";
+
+let score=0;
+
+let level=1;
+
+let correct=0;
+
+let frame=0;
+
+let speed=4;
+
+let shield=0;
+
+let boost=0;
+
+let invincible=0;
+
+let obstacles=[];
+
+let items=[];
+
+let dino={
+
+x:75,
+
+y:185,
+
+vy:0,
+
+jumps:0
+
+};
+
+let currentQuestion=null;
+
+let lastQuestion=-1;
+
+let answering=false;
+
+let soundOn=true;
+
+let audioCtx=null;
+
+let gameSession=0;
+
+let best=0;
+
+try{
+
+best=Number(localStorage.getItem("dinoWaveBest3")||0);
+
+}catch(e){}
+
+document.getElementById("best").textContent=best;
+
+/* =========================
+
+   音效系統
+
+========================= */
+
+function initAudio(){
+
+if(!soundOn)return;
+
+try{
+
+const AudioContextClass=
+
+window.AudioContext||window.webkitAudioContext;
+
+if(!AudioContextClass)return;
+
+if(!audioCtx){
+
+audioCtx=new AudioContextClass();
+
+}
+
+if(audioCtx.state==="suspended"){
+
+audioCtx.resume().catch(()=>{});
+
+}
+
+}catch(e){}
+
+}
+
+function tone(freq,duration=0.12,type="sine",volume=.16,delay=0){
+
+if(!soundOn)return;
+
+initAudio();
+
+if(!audioCtx)return;
+
+try{
+
+let now=audioCtx.currentTime+delay;
+
+let osc=audioCtx.createOscillator();
+
+let gain=audioCtx.createGain();
+
+osc.type=type;
+
+osc.frequency.setValueAtTime(freq,now);
+
+gain.gain.setValueAtTime(.001,now);
+
+gain.gain.exponentialRampToValueAtTime(
+
+Math.max(.001,volume),now+.012
+
+);
+
+gain.gain.exponentialRampToValueAtTime(
+
+.001,now+duration
+
+);
+
+osc.connect(gain);
+
+gain.connect(audioCtx.destination);
+
+osc.start(now);
+
+osc.stop(now+duration+.02);
+
+}catch(e){}
+
+}
+
+function playSound(name){
+
+if(!soundOn)return;
+
+if(name==="jump"){
+
+tone(380,.1,"square",.07);
+
+tone(580,.13,"sine",.09,.08);
+
+}
+
+if(name==="correct"){
+
+tone(520,.12,"sine",.15);
+
+tone(780,.18,"sine",.15,.13);
+
+}
+
+if(name==="wrong"){
+
+tone(250,.18,"sawtooth",.07);
+
+tone(170,.2,"sawtooth",.07,.17);
+
+}
+
+if(name==="evolve"){
+
+tone(400,.13,"triangle",.15);
+
+tone(520,.13,"triangle",.15,.14);
+
+tone(660,.13,"triangle",.15,.28);
+
+tone(880,.3,"triangle",.17,.42);
+
+}
+
+if(name==="item"){
+
+tone(700,.1,"sine",.12);
+
+tone(1050,.2,"sine",.12,.1);
+
+}
+
+if(name==="hit"){
+
+tone(180,.18,"sawtooth",.12);
+
+}
+
+if(name==="death"){
+
+tone(420,.2,"sawtooth",.12);
+
+tone(300,.2,"sawtooth",.12,.2);
+
+tone(180,.35,"sawtooth",.12,.4);
+
+}
+
+if(name==="start"){
+
+tone(440,.12,"triangle",.12);
+
+tone(660,.12,"triangle",.12,.14);
+
+tone(880,.22,"triangle",.12,.28);
+
+}
+
+}
+
+function toggleSound(){
+
+soundOn=!soundOn;
+
+document.getElementById("soundBtn").textContent=
+
+soundOn?"🔊 音效開啟":"🔇 音效關閉";
+
+if(soundOn){
+
+initAudio();
+
+playSound("correct");
+
+}
+
+}
+
+/* =========================
+
+   國二理化60題
+
+   格式：題目、選項、答案、解析
+
+========================= */
+
+const questions=[
+
+["波形最高的位置稱為？",
+
+["波峰","波谷","波長","週期"],0,
+
+"波峰是波形最高的位置。"],
+
+["波形最低的位置稱為？",
+
+["波峰","波谷","振幅","頻率"],1,
+
+"波谷是波形最低的位置。"],
+
+["相鄰兩個波峰的距離稱為？",
+
+["振幅","週期","波長","頻率"],2,
+
+"相鄰兩個波峰的距離是一個波長。"],
+
+["相鄰兩個波谷的距離稱為？",
+
+["波速","振幅","週期","波長"],3,
+
+"相鄰兩個波谷的距離也是一個波長。"],
+
+["波峰到平衡位置的距離稱為？",
+
+["振幅","波長","頻率","週期"],0,
+
+"振幅是介質偏離平衡位置的最大距離。"],
+
+["振幅的常用單位是？",
+
+["Hz","m","s","m/s"],1,
+
+"振幅是長度，可用公尺表示。"],
+
+["波長的常用單位是？",
+
+["Hz","秒","公尺","牛頓"],2,
+
+"波長是長度，可用公尺表示。"],
+
+["頻率代表什麼？",
+
+["每秒振動次數","每次振動距離","波的高度","波的能量"],0,
+
+"頻率是每秒完成振動的次數。"],
+
+["頻率的單位是？",
+
+["秒","赫茲","公尺","焦耳"],1,
+
+"頻率的單位是赫茲Hz。"],
+
+["週期代表什麼？",
+
+["每秒振動次數","波的高度","完成一次振動的時間","波的速度"],2,
+
+"週期是完成一次振動所需的時間。"],
+
+["週期的單位是？",
+
+["秒","Hz","m/s","牛頓"],0,
+
+"週期的SI單位是秒。"],
+
+["頻率與週期的關係是？",
+
+["相加等於1","互為倒數","永遠相等","沒有關係"],1,
+
+"頻率f＝1÷週期T。"],
+
+["頻率2Hz，週期為？",
+
+["2秒","4秒","0.5秒","1秒"],2,
+
+"週期＝1÷2＝0.5秒。"],
+
+["頻率4Hz，週期為？",
+
+["0.25秒","4秒","2秒","8秒"],0,
+
+"週期＝1÷4＝0.25秒。"],
+
+["頻率5Hz，週期為？",
+
+["5秒","0.2秒","1秒","10秒"],1,
+
+"週期＝1÷5＝0.2秒。"],
+
+["頻率10Hz，週期為？",
+
+["10秒","1秒","0.1秒","100秒"],2,
+
+"週期＝1÷10＝0.1秒。"],
+
+["週期2秒，頻率為？",
+
+["0.5Hz","2Hz","4Hz","1Hz"],0,
+
+"頻率＝1÷2＝0.5Hz。"],
+
+["週期0.5秒，頻率為？",
+
+["0.5Hz","2Hz","5Hz","10Hz"],1,
+
+"頻率＝1÷0.5＝2Hz。"],
+
+["週期0.25秒，頻率為？",
+
+["2Hz","8Hz","4Hz","0.25Hz"],2,
+
+"頻率＝1÷0.25＝4Hz。"],
+
+["週期0.1秒，頻率為？",
+
+["10Hz","1Hz","0.1Hz","100Hz"],0,
+
+"頻率＝1÷0.1＝10Hz。"],
+
+["波速公式為？",
+
+["波長×頻率","波長÷頻率","頻率÷波長","振幅×週期"],0,
+
+"波速v＝波長λ×頻率f。"],
+
+["波速的單位是？",
+
+["Hz","m/s","秒","m"],1,
+
+"波速是每秒傳播的距離。"],
+
+["波長2m、頻率3Hz，波速？",
+
+["5m/s","1.5m/s","6m/s","9m/s"],2,
+
+"波速＝2×3＝6m/s。"],
+
+["波長4m、頻率5Hz，波速？",
+
+["20m/s","9m/s","1.25m/s","25m/s"],0,
+
+"波速＝4×5＝20m/s。"],
+
+["波長3m、頻率6Hz，波速？",
+
+["9m/s","18m/s","2m/s","36m/s"],1,
+
+"波速＝3×6＝18m/s。"],
+
+["波長5m、頻率2Hz，波速？",
+
+["2.5m/s","7m/s","10m/s","25m/s"],2,
+
+"波速＝5×2＝10m/s。"],
+
+["波長8m、頻率4Hz，波速？",
+
+["32m/s","12m/s","2m/s","16m/s"],0,
+
+"波速＝8×4＝32m/s。"],
+
+["波長6m、頻率3Hz，波速？",
+
+["9m/s","18m/s","2m/s","36m/s"],1,
+
+"波速＝6×3＝18m/s。"],
+
+["波長10m、頻率2Hz，波速？",
+
+["5m/s","12m/s","20m/s","100m/s"],2,
+
+"波速＝10×2＝20m/s。"],
+
+["波長2m、頻率8Hz，波速？",
+
+["16m/s","4m/s","10m/s","6m/s"],0,
+
+"波速＝2×8＝16m/s。"],
+
+["波速12m/s、頻率3Hz，波長？",
+
+["36m","4m","9m","15m"],1,
+
+"波長＝12÷3＝4m。"],
+
+["波速24m/s、頻率6Hz，波長？",
+
+["18m","30m","4m","144m"],2,
+
+"波長＝24÷6＝4m。"],
+
+["波速20m/s、頻率5Hz，波長？",
+
+["4m","100m","15m","25m"],0,
+
+"波長＝20÷5＝4m。"],
+
+["波速30m/s、頻率10Hz，波長？",
+
+["300m","3m","20m","40m"],1,
+
+"波長＝30÷10＝3m。"],
+
+["波速18m/s、頻率3Hz，波長？",
+
+["54m","15m","6m","21m"],2,
+
+"波長＝18÷3＝6m。"],
+
+["波速40m/s、頻率8Hz，波長？",
+
+["5m","32m","48m","320m"],0,
+
+"波長＝40÷8＝5m。"],
+
+["波速20m/s、波長5m，頻率？",
+
+["100Hz","4Hz","15Hz","25Hz"],1,
+
+"頻率＝20÷5＝4Hz。"],
+
+["波速30m/s、波長5m，頻率？",
+
+["150Hz","25Hz","6Hz","35Hz"],2,
+
+"頻率＝30÷5＝6Hz。"],
+
+["波速24m/s、波長3m，頻率？",
+
+["8Hz","72Hz","21Hz","27Hz"],0,
+
+"頻率＝24÷3＝8Hz。"],
+
+["波速18m/s、波長6m，頻率？",
+
+["108Hz","3Hz","12Hz","24Hz"],1,
+
+"頻率＝18÷6＝3Hz。"],
+
+["橫波的振動方向與傳播方向？",
+
+["平行","相同","垂直","一定相反"],2,
+
+"橫波的振動方向與傳播方向垂直。"],
+
+["縱波的振動方向與傳播方向？",
+
+["平行","垂直","一定相反","無關"],0,
+
+"縱波的振動方向與傳播方向平行。"],
+
+["繩波通常屬於？",
+
+["縱波","橫波","聲波","電磁波"],1,
+
+"繩波通常是橫波。"],
+
+["空氣中的聲波屬於？",
+
+["橫波","電磁波","縱波","光波"],2,
+
+"聲波在空氣中屬於縱波。"],
+
+["波主要傳遞什麼？",
+
+["能量","物質","水","空氣"],0,
+
+"波可以傳遞能量，介質不隨波整體前進。"],
+
+["機械波傳播需要什麼？",
+
+["真空","介質","陽光","電池"],1,
+
+"機械波需要介質傳播。"],
+
+["聲音能在真空中傳播嗎？",
+
+["可以","速度更快","不可以","只在夜晚可以"],2,
+
+"聲波需要介質，不能在真空中傳播。"],
+
+["光能在真空中傳播嗎？",
+
+["可以","不可以","需要空氣","需要水"],0,
+
+"光是電磁波，可以在真空中傳播。"],
+
+["聲音在空氣中如何傳播？",
+
+["靠光線","靠空氣振動","靠磁力","靠重力"],1,
+
+"空氣分子的振動傳遞聲波能量。"],
+
+["聲音的高低主要由什麼決定？",
+
+["振幅","波速","頻率","傳播距離"],2,
+
+"頻率越高，音調通常越高。"],
+
+["聲音的大小主要與什麼有關？",
+
+["振幅","週期","波長","方向"],0,
+
+"其他條件相同時，振幅越大，聲音通常越大。"],
+
+["頻率越高，音調通常？",
+
+["越低","越高","不變","消失"],1,
+
+"音調主要與聲波頻率有關。"],
+
+["振幅越大，聲音通常？",
+
+["越小","音調越高","越大","速度越快"],2,
+
+"其他條件相同時，振幅越大通常越響亮。"],
+
+["聲音在空氣中的速率約為？",
+
+["340m/s","3m/s","30萬m/s","3億m/s"],0,
+
+"常溫空氣中的聲速約340m/s。"],
+
+["聲音在一般情況下，哪種介質傳得較快？",
+
+["氣體","固體","真空","沒有差別"],1,
+
+"聲音通常在固體中傳播較快。"],
+
+["回聲主要是聲波的什麼現象？",
+
+["折射","干涉","反射","吸收"],2,
+
+"聲波遇到障礙物反射，可能形成回聲。"],
+
+["波速固定時，頻率增加，波長會？",
+
+["減少","增加","不變","變成零"],0,
+
+"波速固定時，波長與頻率成反比。"],
+
+["波速固定時，頻率加倍，波長？",
+
+["加倍","減半","不變","四倍"],1,
+
+"v＝fλ，頻率加倍，波長減半。"],
+
+["波速固定時，波長加倍，頻率？",
+
+["加倍","四倍","減半","不變"],2,
+
+"波速固定時，波長加倍，頻率減半。"],
+
+["一個波每秒振動20次，頻率為？",
+
+["20Hz","2Hz","0.05Hz","200Hz"],0,
+
+"每秒振動20次就是20Hz。"]
+
+];
+
+/* =========================
+
+   題目系統
+
+========================= */
+
+let questionBag=[];
+
+function shuffle(arr){
+
+for(let i=arr.length-1;i>0;i--){
+
+let j=Math.floor(Math.random()*(i+1));
+
+[arr[i],arr[j]]=[arr[j],arr[i]];
+
+}
+
+return arr;
+
+}
+
+function nextQuestion(){
+
+if(state!=="training")return;
+
+if(questionBag.length===0){
+
+questionBag=shuffle(
+
+questions.map((_,i)=>i)
+
+);
+
+if(questionBag.length>1 &&
+
+questionBag[questionBag.length-1]===lastQuestion){
+
+questionBag.unshift(questionBag.pop());
+
+}
+
+}
+
+let index=questionBag.pop();
+
+if(index===lastQuestion && questionBag.length){
+
+questionBag.unshift(index);
+
+index=questionBag.pop();
+
+}
+
+lastQuestion=index;
+
+currentQuestion=questions[index];
+
+answering=false;
+
+document.getElementById("trainQuestion").textContent=
+
+currentQuestion[0];
+
+document.getElementById("trainExplain").textContent="";
+
+let box=document.getElementById("trainOptions");
+
+box.innerHTML="";
+
+currentQuestion[1].forEach((option,i)=>{
+
+let b=document.createElement("button");
+
+b.textContent=
+
+String.fromCharCode(65+i)+"．"+option;
+
+b.onclick=()=>answerTraining(i);
+
+box.appendChild(b);
+
+});
+
+}
+
+function getDinoLevel(){
+
+if(correct>=10)return 5;
+
+if(correct>=7)return 4;
+
+if(correct>=4)return 3;
+
+if(correct>=2)return 2;
+
+return 1;
+
+}
+
+function updateDino(){
+
+let lv=getDinoLevel();
+
+let names=[
+
+"🦖 Lv.1 小恐龍",
+
+"🦕 Lv.2 迅猛龍",
+
+"🛡️ Lv.3 裝甲龍",
+
+"⚡ Lv.4 雷電龍",
+
+"🐉 Lv.5 傳說龍"
+
+];
+
+let abilities=[
+
+"基本跳躍",
+
+"解鎖二段跳",
+
+"二段跳＋開場護盾",
+
+"二段跳＋強化跳躍＋護盾",
+
+"傳說龍！雙護盾＋二段跳＋強化跳躍"
+
+];
+
+document.getElementById("dinoName").textContent=
+
+names[lv-1];
+
+document.getElementById("trainingInfo").textContent=
+
+abilities[lv-1];
+
+document.getElementById("correct").textContent=correct;
+
+}
+
+function answerTraining(i){
+
+if(answering||state!=="training")return;
+
+initAudio();
+
+answering=true;
+
+let q=currentQuestion;
+
+let ok=i===q[2];
+
+document.querySelectorAll("#trainOptions button")
+
+.forEach(b=>b.disabled=true);
+
+let oldLevel=getDinoLevel();
+
+if(ok){
+
+correct++;
+
+playSound("correct");
+
+updateDino();
+
+if(getDinoLevel()>oldLevel){
+
+playSound("evolve");
+
+}
+
+document.getElementById("trainExplain").textContent=
+
+"✅ 答對！"+q[3];
+
+}else{
+
+playSound("wrong");
+
+document.getElementById("trainExplain").textContent=
+
+"❌ 答錯！正確答案："+q[1][q[2]]+
+
+"。"+q[3];
+
+}
+
+setTimeout(()=>{
+
+if(state==="training")nextQuestion();
+
+},1400);
+
+}
+
+/* =========================
+
+   跑酷系統
+
+========================= */
+
+function updateStats(){
+
+document.getElementById("score").textContent=score;
+
+document.getElementById("level").textContent=level;
+
+if(score>best){
+
+best=score;
+
+document.getElementById("best").textContent=best;
+
+try{
+
+localStorage.setItem("dinoWaveBest3",best);
+
+}catch(e){}
+
+}
+
+}
+
+function startGame(){
+
+initAudio();
+
+gameSession++;
+
+state="running";
+
+score=0;
+
+level=1;
+
+frame=0;
+
+speed=4;
+
+boost=0;
+
+invincible=0;
+
+obstacles=[];
+
+items=[];
+
+dino.y=185;
+
+dino.vy=0;
+
+dino.jumps=0;
+
+let lv=getDinoLevel();
+
+shield=lv>=5?2:lv>=3?1:0;
+
+document.getElementById("training").classList.add("hidden");
+
+document.getElementById("gameArea").classList.remove("hidden");
+
+document.getElementById("message").textContent=
+
+"🦖 冒險開始！";
+
+playSound("start");
+
+updateStats();
+
+}
+
+function jump(){
+
+if(state!=="running")return;
+
+initAudio();
+
+let maxJumps=getDinoLevel()>=2?2:1;
+
+if(dino.jumps>=maxJumps)return;
+
+dino.vy=getDinoLevel()>=4?-13:-11;
+
+dino.jumps++;
+
+playSound("jump");
+
+}
+
+function collision(o){
+
+return dino.x<o.x+o.w &&
+
+dino.x+35>o.x &&
+
+dino.y<o.y+o.h &&
+
+dino.y+40>o.y;
+
+}
+
+function hit(){
+
+if(invincible>0)return;
+
+if(shield>0){
+
+shield--;
+
+invincible=100;
+
+playSound("hit");
+
+document.getElementById("message").textContent=
+
+"🛡️ 護盾抵擋一次傷害！";
+
+return;
+
+}
+
+gameOver();
+
+}
+
+function gameOver(){
+
+if(state!=="running")return;
+
+state="over";
+
+playSound("death");
+
+document.getElementById("message").textContent=
+
+"💀 遊戲結束！得分："+score+
+
+"分。點擊重新開始，再次挑戰！";
+
+updateStats();
+
+}
+
+function restart(){
+
+gameSession++;
+
+state="training";
+
+correct=0;
+
+score=0;
+
+level=1;
+
+frame=0;
+
+obstacles=[];
+
+items=[];
+
+questionBag=[];
+
+lastQuestion=-1;
+
+document.getElementById("training").classList.remove("hidden");
+
+document.getElementById("gameArea").classList.add("hidden");
+
+updateDino();
+
+updateStats();
+
+nextQuestion();
+
+}
+
+/* =========================
+
+   遊戲畫面
+
+========================= */
+
+function draw(){
+
+requestAnimationFrame(draw);
+
+ctx.clearRect(0,0,600,280);
+
+ctx.fillStyle="#dff6ff";
+
+ctx.fillRect(0,0,600,280);
+
+/* 波形 */
+
+ctx.strokeStyle="#42b8db";
+
+ctx.lineWidth=3;
+
+ctx.beginPath();
+
+for(let x=0;x<=600;x+=4){
+
+let y=55+18*Math.sin((x+frame*2)/35);
+
+if(x===0)ctx.moveTo(x,y);
+
+else ctx.lineTo(x,y);
+
+}
+
+ctx.stroke();
+
+/* 地面 */
+
+ctx.fillStyle="#82ce8c";
+
+ctx.fillRect(0,230,600,50);
+
+ctx.fillStyle="#3e9e55";
+
+ctx.fillRect(0,228,600,4);
+
+ctx.font="14px Arial";
+
+ctx.fillStyle="#176a86";
+
+ctx.fillText(
+
+"🌊 波峰・波谷・波長・頻率・波速",
+
+12,22
+
+);
+
+/* 遊戲進行 */
+
+if(state==="running"){
+
+frame++;
+
+level=Math.floor(score/200)+1;
+
+speed=4+Math.min(level*.35,3);
+
+if(boost>0){
+
+boost--;
+
+speed+=1.5;
+
+}
+
+if(invincible>0)invincible--;
+
+/* 重力 */
+
+dino.vy+=.6;
+
+dino.y+=dino.vy;
+
+if(dino.y>=185){
+
+dino.y=185;
+
+dino.vy=0;
+
+dino.jumps=0;
+
+}
+
+/* 產生障礙物 */
+
+if(frame%100===0){
+
+let type=Math.floor(Math.random()*3);
+
+obstacles.push({
+
+x:610,
+
+y:type===0?203:type===1?197:205,
+
+w:type===1?34:26,
+
+h:type===1?33:25,
+
+type:type
+
+});
+
+}
+
+/* 隨機掉寶 */
+
+if(frame%180===0){
+
+items.push({
+
+x:610,
+
+y:rand(135,175),
+
+w:26,
+
+h:26,
+
+type:Math.floor(Math.random()*3)
+
+});
+
+}
+
+/* 障礙物移動 */
+
+for(let o of obstacles){
+
+o.x-=speed;
+
+if(collision(o)){
+
+o.x=-100;
+
+hit();
+
+if(state!=="running")break;
+
+}
+
+}
+
+/* 道具移動 */
+
+if(state==="running"){
+
+for(let o of items){
+
+o.x-=speed;
+
+if(collision(o)){
+
+o.x=-100;
+
+if(o.type===0){
+
+shield++;
+
+document.getElementById("message").textContent=
+
+"🛡️ 獲得護盾！";
+
+}
+
+if(o.type===1){
+
+boost=240;
+
+document.getElementById("message").textContent=
+
+"⚡ 獲得加速！";
+
+}
+
+if(o.type===2){
+
+score+=50;
+
+document.getElementById("message").textContent=
+
+"💎 獲得50分！";
+
+}
+
+playSound("item");
+
+}
+
+}
+
+}
+
+obstacles=obstacles.filter(o=>o.x>-50);
+
+items=items.filter(o=>o.x>-50);
+
+if(frame%10===0){
+
+score+=2;
+
+}
+
+updateStats();
+
+}
+
+/* 畫恐龍 */
+
+let lv=getDinoLevel();
+
+let icon=
+
+lv===5?"🐉":
+
+lv===4?"⚡":
+
+lv===3?"🦖":
+
+lv===2?"🦕":"🦖";
+
+if(!(invincible>0 && frame%8<4)){
+
+ctx.font="43px Arial";
+
+ctx.fillText(icon,dino.x,dino.y+40);
+
+}
+
+/* 畫障礙 */
+
+obstacles.forEach(o=>{
+
+ctx.fillStyle=
+
+o.type===0?"#795548":
+
+o.type===1?"#8e44ad":"#e67e22";
+
+ctx.beginPath();
+
+if(o.type===1){
+
+ctx.fillRect(o.x,o.y,o.w,o.h);
+
+}else{
+
+ctx.moveTo(o.x,o.y+o.h);
+
+ctx.lineTo(o.x+o.w/2,o.y);
+
+ctx.lineTo(o.x+o.w,o.y+o.h);
+
+ctx.fill();
+
+}
+
+});
+
+/* 畫道具 */
+
+items.forEach(o=>{
+
+ctx.font="25px Arial";
+
+ctx.fillText(
+
+["🛡️","⚡","💎"][o.type],
+
+o.x,o.y+24
+
+);
+
+});
+
+/* 護盾 */
+
+if(shield>0){
+
+ctx.strokeStyle="#a35cff";
+
+ctx.lineWidth=3;
+
+ctx.beginPath();
+
+ctx.arc(
+
+dino.x+20,
+
+dino.y+20,
+
+32,
+
+0,
+
+Math.PI*2
+
+);
+
+ctx.stroke();
+
+ctx.font="15px Arial";
+
+ctx.fillStyle="#7135b9";
+
+ctx.fillText("護盾×"+shield,10,105);
+
+}
+
+/* 結束畫面 */
+
+if(state==="over"){
+
+ctx.fillStyle="rgba(0,0,0,.35)";
+
+ctx.fillRect(0,0,600,280);
+
+ctx.fillStyle="white";
+
+ctx.font="bold 38px Arial";
+
+ctx.textAlign="center";
+
+ctx.fillText("遊戲結束",300,130);
+
+ctx.font="24px Arial";
+
+ctx.fillText("得分："+score,300,170);
+
+ctx.textAlign="left";
+
+}
+
+}
+
+canvas.addEventListener("pointerdown",jump);
+
+document.addEventListener("keydown",e=>{
+
+if(e.code==="Space"){
+
+e.preventDefault();
+
+jump();
+
+}
+
+});
+
+updateDino();
+
+nextQuestion();
+
+draw();
+
+</script>
+
+</body>
+
+</html>
